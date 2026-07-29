@@ -28,12 +28,28 @@
       "variant": null,
       "order": 1,
       "visible": true,
-      "subtitle": "Identity Portal",
-      "description": "Bio and contact information",
-      "details": "Identity > Portal",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Form",
+            "body": "Bio and contact information"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Identity Portal"
+              },
+              {
+                "label": "Details",
+                "value": "Identity > Portal"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -49,12 +65,28 @@
       "variant": null,
       "order": 2,
       "visible": true,
-      "subtitle": "Project Showcase",
-      "description": "3D turnarounds and rotations",
-      "details": "3D > Showcase",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "SCATTER",
+            "body": "3D turnarounds and rotations"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Project Showcase"
+              },
+              {
+                "label": "Details",
+                "value": "3D > Showcase"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -70,12 +102,28 @@
       "variant": null,
       "order": 3,
       "visible": true,
-      "subtitle": "Experiment Archive",
-      "description": "Collection of experiments",
-      "details": "Archive > Concepts",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "Concept",
+            "body": "Collection of experiments"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Experiment Archive"
+              },
+              {
+                "label": "Details",
+                "value": "Archive > Concepts"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -91,12 +139,24 @@
       "variant": null,
       "order": 4,
       "visible": true,
-      "subtitle": "Brand Portal",
-      "description": "Immersive brand experience",
-      "details": null,
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "ON:NO",
+            "body": "Immersive brand experience"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Brand Portal"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -112,12 +172,24 @@
       "variant": null,
       "order": 5,
       "visible": true,
-      "subtitle": "Resume Document",
-      "description": "PDF export available",
-      "details": null,
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "RESUME",
+            "body": "PDF export available"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Resume Document"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -133,12 +205,28 @@
       "variant": null,
       "order": 6,
       "visible": true,
-      "subtitle": "Locked Access",
-      "description": "Restricted placeholder",
-      "details": "Access > Restricted",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "OLD GOLD MOUNTAIN",
+            "body": "Restricted placeholder"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Locked Access"
+              },
+              {
+                "label": "Details",
+                "value": "Access > Restricted"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -154,12 +242,28 @@
       "variant": null,
       "order": 7,
       "visible": true,
-      "subtitle": "Concept Designs",
-      "description": "Gallery showcase",
-      "details": "Gallery > Concept",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "FMSB",
+            "body": "Gallery showcase"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Concept Designs"
+              },
+              {
+                "label": "Details",
+                "value": "Gallery > Concept"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -175,12 +279,28 @@
       "variant": null,
       "order": 8,
       "visible": true,
-      "subtitle": "Concept Designs",
-      "description": "Gallery showcase",
-      "details": "Gallery > Concept",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "PROBLEMISTA",
+            "body": "Gallery showcase"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Concept Designs"
+              },
+              {
+                "label": "Details",
+                "value": "Gallery > Concept"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -196,12 +316,28 @@
       "variant": null,
       "order": 9,
       "visible": true,
-      "subtitle": "Concept Designs",
-      "description": "Gallery showcase",
-      "details": "Gallery > Concept",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "SPACEMAN",
+            "body": "Gallery showcase"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Concept Designs"
+              },
+              {
+                "label": "Details",
+                "value": "Gallery > Concept"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -217,12 +353,28 @@
       "variant": null,
       "order": 10,
       "visible": true,
-      "subtitle": "Locked Access",
-      "description": "Restricted placeholder",
-      "details": "Access > Restricted",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "SEKIRO",
+            "body": "Restricted placeholder"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Locked Access"
+              },
+              {
+                "label": "Details",
+                "value": "Access > Restricted"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -238,12 +390,28 @@
       "variant": null,
       "order": 11,
       "visible": true,
-      "subtitle": "Locked Access",
-      "description": "Restricted placeholder",
-      "details": "Access > Restricted",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "SACCA MACANA",
+            "body": "Restricted placeholder"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Locked Access"
+              },
+              {
+                "label": "Details",
+                "value": "Access > Restricted"
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -259,12 +427,28 @@
       "variant": null,
       "order": 12,
       "visible": true,
-      "subtitle": "Locked Access",
-      "description": "Restricted placeholder",
-      "details": "Access > Restricted",
       "content": {
         "type": "blocks",
-        "blocks": []
+        "blocks": [
+          {
+            "type": "text",
+            "heading": "ADRIATISSIMO",
+            "body": "Restricted placeholder"
+          },
+          {
+            "type": "meta",
+            "rows": [
+              {
+                "label": "Subtitle",
+                "value": "Locked Access"
+              },
+              {
+                "label": "Details",
+                "value": "Access > Restricted"
+              }
+            ]
+          }
+        ]
       }
     },
     {
