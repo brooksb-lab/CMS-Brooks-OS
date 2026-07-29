@@ -12,12 +12,10 @@ import { FloraAppView } from '@/src/components/FloraAppView';
 import { StickiesAppView } from '@/src/components/StickiesAppView';
 import { MacintoshHDView } from '@/src/components/MacintoshHDView';
 import { BlockRenderer } from '@/src/components/BlockRenderer';
-import { IframeRenderer } from '@/src/components/IframeRenderer';
 
 export interface WindowContentConfig {
-  type: 'blocks' | 'component' | 'iframe' | string;
+  type: 'blocks' | 'component' | string;
   name?: string;
-  url?: string;
   blocks?: any[];
   props?: Record<string, any>;
 }
@@ -63,12 +61,6 @@ export function resolveWindowComponent(entry: WindowDataEntry): React.ReactNode 
     if (Component) {
       return <Component {...(entry.content.props || {})} />;
     }
-  }
-
-  if (entry.content.type === 'iframe' && entry.content.url) {
-    return (
-      <IframeRenderer url={entry.content.url} title={entry.title} />
-    );
   }
 
   if (entry.content.type === 'blocks') {
