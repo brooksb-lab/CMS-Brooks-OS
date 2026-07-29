@@ -20,7 +20,8 @@ import { CloAppView } from '@/src/components/CloAppView';
 import { FloraAppView } from '@/src/components/FloraAppView';
 import { StickiesAppView } from '@/src/components/StickiesAppView';
 import { DesktopFolderView } from '@/src/components/DesktopFolderView';
-import { windowsRegistryData, resolveWindowComponent, DOCK_ORDER as DESKTOP_DOCK_ORDER, MOBILE_DOCK_ORDER } from '@/src/data/windowLoader';
+import { windowsRegistryData, resolveWindowComponent } from '@/src/data/windowLoader';
+import { DOCK_ORDER as DESKTOP_DOCK_ORDER, MOBILE_DOCK_ORDER } from '@/src/data/dockOrder';
 
 // App Components
 const GenericApp = ({ title, subtitle, description, details, icon, ...props }: any) => (
