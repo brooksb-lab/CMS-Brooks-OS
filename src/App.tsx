@@ -528,6 +528,7 @@ const DesktopApp = () => {
     windowsRegistryData.forEach(entry => {
       const derivedFolderContents = windowsRegistryData
         .filter(w => w.folder === entry.id)
+        .sort((a, b) => a.order - b.order)
         .map(w => w.id);
 
       let initX: number | undefined = initialMap[entry.id]?.x;

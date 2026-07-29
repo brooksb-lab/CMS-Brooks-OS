@@ -121,6 +121,48 @@
       }
     },
     {
+      "id": "old_gold",
+      "title": "OLD GOLD MOUNTAIN",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 6,
+      "visible": true,
+      "subtitle": "Locked Access",
+      "description": "Restricted placeholder",
+      "details": "Access > Restricted",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "fmsb",
+      "title": "FMSB",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 7,
+      "visible": true,
+      "subtitle": "Concept Designs",
+      "description": "Gallery showcase",
+      "details": "Gallery > Concept",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
       "id": "problemista",
       "title": "PROBLEMISTA",
       "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
@@ -131,7 +173,7 @@
       "showInDock": false,
       "isFullScreen": false,
       "variant": null,
-      "order": 6,
+      "order": 8,
       "visible": true,
       "subtitle": "Concept Designs",
       "description": "Gallery showcase",
@@ -152,53 +194,11 @@
       "showInDock": false,
       "isFullScreen": false,
       "variant": null,
-      "order": 7,
-      "visible": true,
-      "subtitle": "Concept Designs",
-      "description": "Gallery showcase",
-      "details": "Gallery > Concept",
-      "content": {
-        "type": "blocks",
-        "blocks": []
-      }
-    },
-    {
-      "id": "fmsb",
-      "title": "FMSB",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
-      "folder": "film",
-      "width": 800,
-      "height": 600,
-      "showOnDesktop": false,
-      "showInDock": false,
-      "isFullScreen": false,
-      "variant": null,
-      "order": 8,
-      "visible": true,
-      "subtitle": "Concept Designs",
-      "description": "Gallery showcase",
-      "details": "Gallery > Concept",
-      "content": {
-        "type": "blocks",
-        "blocks": []
-      }
-    },
-    {
-      "id": "old_gold",
-      "title": "OLD GOLD MOUNTAIN",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
-      "folder": "film",
-      "width": 800,
-      "height": 600,
-      "showOnDesktop": false,
-      "showInDock": false,
-      "isFullScreen": false,
-      "variant": null,
       "order": 9,
       "visible": true,
-      "subtitle": "Locked Access",
-      "description": "Restricted placeholder",
-      "details": "Access > Restricted",
+      "subtitle": "Concept Designs",
+      "description": "Gallery showcase",
+      "details": "Gallery > Concept",
       "content": {
         "type": "blocks",
         "blocks": []
@@ -358,11 +358,11 @@
       "content": null
     },
     {
-      "id": "spotify",
-      "title": "Spotify",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0001_Spotify_yvwcbf.png",
+      "id": "mail",
+      "title": "Contact",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0005_Mail_zpuiac.png",
       "folder": "contact_folder",
-      "width": 400,
+      "width": 800,
       "height": 600,
       "showOnDesktop": false,
       "showInDock": true,
@@ -372,16 +372,16 @@
       "visible": true,
       "content": {
         "type": "component",
-        "name": "SpotifyAppView"
+        "name": "MailAppView"
       }
     },
     {
-      "id": "freeform",
-      "title": "Notes",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0002_3840px-Apple_Notes_icon.svg_wqze4q.png",
+      "id": "brooks_chat",
+      "title": "Chat",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0010_iMessage_ytpuio.png",
       "folder": "contact_folder",
-      "width": 800,
-      "height": 600,
+      "width": 700,
+      "height": 750,
       "showOnDesktop": false,
       "showInDock": true,
       "isFullScreen": false,
@@ -390,7 +390,7 @@
       "visible": true,
       "content": {
         "type": "component",
-        "name": "NotesApp"
+        "name": "MessagesApp"
       }
     },
     {
@@ -463,9 +463,9 @@
       "content": null
     },
     {
-      "id": "mail",
-      "title": "Contact",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0005_Mail_zpuiac.png",
+      "id": "freeform",
+      "title": "Notes",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0002_3840px-Apple_Notes_icon.svg_wqze4q.png",
       "folder": "contact_folder",
       "width": 800,
       "height": 600,
@@ -477,16 +477,16 @@
       "visible": true,
       "content": {
         "type": "component",
-        "name": "MailAppView"
+        "name": "NotesApp"
       }
     },
     {
-      "id": "brooks_chat",
-      "title": "Chat",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0010_iMessage_ytpuio.png",
+      "id": "spotify",
+      "title": "Spotify",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0001_Spotify_yvwcbf.png",
       "folder": "contact_folder",
-      "width": 700,
-      "height": 750,
+      "width": 400,
+      "height": 600,
       "showOnDesktop": false,
       "showInDock": true,
       "isFullScreen": false,
@@ -495,7 +495,7 @@
       "visible": true,
       "content": {
         "type": "component",
-        "name": "MessagesApp"
+        "name": "SpotifyAppView"
       }
     }
   ]

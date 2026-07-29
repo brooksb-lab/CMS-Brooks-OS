@@ -1,5 +1,9 @@
 import React from 'react';
 import windowsConfig from './windows.json';
+
+export const DOCK_ORDER: string[] = windowsConfig.dockOrder || ['clo', 'photoshop', 'flora_ai', 'mail', 'brooks_chat', 'freeform', 'spotify'];
+export const MOBILE_DOCK_ORDER: string[] = windowsConfig.mobileDockOrder || ['clo', 'photoshop', 'flora_ai', 'contact_folder'];
+
 import { AppWindowContent } from '@/src/components/AppWindowContent';
 import { FinderWindowView } from '@/src/components/FinderWindowView';
 import { PhotoshopView } from '@/src/components/PhotoshopView';
@@ -40,8 +44,6 @@ export interface WindowDataEntry {
   content: WindowContentConfig | null;
 }
 
-export const DOCK_ORDER: string[] = windowsConfig.dockOrder || ['clo', 'photoshop', 'flora_ai', 'mail', 'brooks_chat', 'freeform', 'spotify'];
-export const MOBILE_DOCK_ORDER: string[] = windowsConfig.mobileDockOrder || ['clo', 'photoshop', 'flora_ai', 'contact_folder'];
 export const windowsRegistryData: WindowDataEntry[] = windowsConfig.windows as WindowDataEntry[];
 
 const GenericApp = ({ title, subtitle, description, details, icon, ...props }: any) => (
