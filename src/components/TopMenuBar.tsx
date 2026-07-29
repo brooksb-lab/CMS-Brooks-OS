@@ -15,6 +15,7 @@ interface MenuItem {
   shortcut?: string;
   disabled?: boolean;
   divider?: boolean;
+  action?: () => void;
 }
 
 const menus: MenuData[] = [
@@ -184,9 +185,10 @@ const menus: MenuData[] = [
 interface TopMenuBarProps {
   activeAppName?: string;
   isFullScreen?: boolean;
+  onOpenWindow?: (id: string) => void;
 }
 
-export const TopMenuBar = ({ activeAppName = 'Brooks', isFullScreen = false }: TopMenuBarProps) => {
+export const TopMenuBar = ({ activeAppName = 'Brooks', isFullScreen = false, onOpenWindow }: TopMenuBarProps) => {
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
   const [time, setTime] = useState(new Date());
   const menuRef = useRef<HTMLDivElement>(null);
@@ -199,6 +201,20 @@ export const TopMenuBar = ({ activeAppName = 'Brooks', isFullScreen = false }: T
   // Update static menu with dynamic title
   const dynamicMenus = useMemo(() => {
     return menus.map(menu => {
+      if (menu.isApple) {
+        return {
+          ...menu,
+          items: menu.items.map(item => {
+            if (item.label === 'System Settings...') {
+              return {
+                ...item,
+                action: () => onOpenWindow?.('system_settings')
+              };
+            }
+            return item;
+          })
+        };
+      }
       if (menu.title === 'Brooks') {
         const title = activeAppName;
         return {
@@ -221,7 +237,7 @@ export const TopMenuBar = ({ activeAppName = 'Brooks', isFullScreen = false }: T
       }
       return menu;
     });
-  }, [activeAppName]);
+  }, [activeAppName, onOpenWindow]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -348,6 +364,9 @@ export const TopMenuBar = ({ activeAppName = 'Brooks', isFullScreen = false }: T
                       onPointerDown={(e) => {
                         e.stopPropagation();
                         if (!item.disabled) {
+                          if (item.action) {
+                            item.action();
+                          }
                           setTimeout(() => {
                             setActiveMenuIndex(null);
                           }, 100);

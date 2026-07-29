@@ -133,7 +133,7 @@ const FolderContent = ({ appId, appIds, windows, toggleWindow, isTouchUI, closeF
 };
 
 const DesktopApp = () => {
-  const { windows, activeWindowId, registerWindow, toggleWindow, closeWindow, minimizeWindow, setMinimizeRect, focusWindow, toggleFullScreen } = useWindowManager();
+  const { windows, activeWindowId, registerWindow, openWindow, toggleWindow, closeWindow, minimizeWindow, setMinimizeRect, focusWindow, toggleFullScreen } = useWindowManager();
   const [isHoveringDockArea, setIsHoveringDockArea] = useState(false);
   const isAnyWindowMaximized = (Object.values(windows) as WindowState[]).some(w => w.isOpen && !w.isMinimized && w.isFullScreen);
   const desktopRef = React.useRef<HTMLDivElement>(null);
@@ -716,6 +716,7 @@ const DesktopApp = () => {
             : 'Brooks'
           } 
           isFullScreen={isAnyWindowMaximized}
+          onOpenWindow={openWindow}
         />
       )}
 

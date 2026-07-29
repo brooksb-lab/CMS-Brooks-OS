@@ -11,6 +11,7 @@ import { CloAppView } from '@/src/components/CloAppView';
 import { FloraAppView } from '@/src/components/FloraAppView';
 import { StickiesAppView } from '@/src/components/StickiesAppView';
 import { MacintoshHDView } from '@/src/components/MacintoshHDView';
+import { SystemSettingsAppView } from '@/src/components/SystemSettingsAppView';
 import { BlockRenderer } from '@/src/components/BlockRenderer';
 
 export interface WindowContentConfig {
@@ -49,6 +50,7 @@ export const COMPONENT_MAP: Record<string, React.FC<any>> = {
   FloraAppView,
   StickiesAppView,
   MacintoshHDView,
+  SystemSettingsAppView,
 };
 
 export function resolveWindowComponent(entry: WindowDataEntry): React.ReactNode {

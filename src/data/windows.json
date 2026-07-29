@@ -681,6 +681,24 @@
         "type": "component",
         "name": "SpotifyAppView"
       }
+    },
+    {
+      "id": "system_settings",
+      "title": "System Settings",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0000_Macintosh-HD_qdutk7.png",
+      "folder": null,
+      "width": 1000,
+      "height": 700,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": true,
+      "variant": null,
+      "order": 99,
+      "visible": false,
+      "content": {
+        "type": "component",
+        "name": "SystemSettingsAppView"
+      }
     }
   ]
 }
