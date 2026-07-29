@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import windowsConfig from '../data/windows.json';
 import {
   Lock, Eye, EyeOff, Trash2, Plus, ChevronUp, ChevronDown,
-  Folder, Layers, Shield, GripVertical, FileText
+  Folder, Layers, Shield, GripVertical, FileText, UploadCloud,
+  Check, AlertCircle, Loader2, RefreshCw
 } from 'lucide-react';
-
-const ADMIN_PASSWORD = "admin";
 
 interface Block {
   type: 'image' | 'imagePair' | 'video' | 'text' | 'caption' | 'spacer' | 'meta' | string;
@@ -34,21 +33,197 @@ interface WindowData {
   [key: string]: any;
 }
 
+interface CloudinaryUploadFieldProps {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+  placeholder?: string;
+  accept?: string;
+  resourceType?: 'image' | 'video' | 'auto';
+}
+
+const CloudinaryUploadField: React.FC<CloudinaryUploadFieldProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder = 'Paste URL or drag file below...',
+  accept = 'image/*,video/*',
+  resourceType = 'auto',
+}) => {
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+  const handleUploadFile = (file: File) => {
+    if (!cloudName || !uploadPreset) {
+      setUploadError(
+        'Cloudinary credentials missing. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in .env'
+      );
+      return;
+    }
+
+    setIsUploading(true);
+    setProgress(0);
+    setUploadError(null);
+
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        setProgress(percent);
+      }
+    };
+
+    xhr.onload = () => {
+      setIsUploading(false);
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (response.secure_url) {
+            onChange(response.secure_url);
+            setUploadError(null);
+          } else {
+            setUploadError('Upload succeeded but no secure URL returned');
+          }
+        } catch (e) {
+          setUploadError('Invalid response from Cloudinary');
+        }
+      } else {
+        let errText = 'Upload failed';
+        try {
+          const errJson = JSON.parse(xhr.responseText);
+          errText = errJson.error?.message || errText;
+        } catch (e) {}
+        setUploadError(`Upload failed (${xhr.status}): ${errText}`);
+      }
+    };
+
+    xhr.onerror = () => {
+      setIsUploading(false);
+      setUploadError('Network error during file upload');
+    };
+
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`);
+    xhr.send(formData);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleUploadFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDraggingOver(false);
+  };
+
+  return (
+    <div className="space-y-2 text-xs">
+      <label className="block text-white/60">{label}</label>
+
+      <div className="flex gap-2 items-center">
+        <input
+          type="text"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 px-3 py-2 bg-black/40 border border-white/15 rounded-md text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+        />
+      </div>
+
+      {/* Drag and Drop Zone */}
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative border border-dashed rounded-lg p-3 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 ${
+          isDraggingOver
+            ? 'border-blue-500 bg-blue-500/10'
+            : 'border-white/15 hover:border-white/30 bg-black/20 hover:bg-black/30'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={accept}
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleUploadFile(e.target.files[0]);
+            }
+          }}
+          className="hidden"
+        />
+
+        {isUploading ? (
+          <div className="w-full space-y-2 py-1">
+            <div className="flex items-center justify-center gap-2 text-blue-400 font-medium text-xs">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Uploading to Cloudinary ({progress}%)</span>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-blue-500 h-full transition-all duration-150"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-white/50 hover:text-white/80 transition-colors">
+            <UploadCloud className="w-4 h-4 text-blue-400" />
+            <span className="text-[11px]">
+              Drag & drop media file here, or <span className="text-blue-400 underline">browse</span>
+            </span>
+          </div>
+        )}
+      </div>
+
+      {uploadError && (
+        <div className="flex items-start gap-1.5 text-red-400 text-[11px] bg-red-500/10 border border-red-500/20 p-2 rounded">
+          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>{uploadError}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SystemSettingsAppView: React.FC = () => {
   // Password Authentication State
   const [passwordInput, setPasswordInput] = useState('');
+  const [verifiedPassword, setVerifiedPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState('');
 
   // Desktop check state
   const [isDesktop, setIsDesktop] = useState(true);
 
-  // Admin Data State (In-Memory)
+  // Admin Data State (holds ALL windows including hidden system_settings)
   const [windowsList, setWindowsList] = useState<WindowData[]>(() => {
     return JSON.parse(JSON.stringify(windowsConfig.windows)) as WindowData[];
   });
+
+  // Selected Window ID
   const [selectedId, setSelectedId] = useState<string | null>(() => {
-    return windowsConfig.windows.length > 0 ? windowsConfig.windows[0].id : null;
+    const visible = windowsConfig.windows.filter((w) => w.id !== 'system_settings');
+    return visible.length > 0 ? visible[0].id : null;
   });
 
   // Reordering Drag State
@@ -60,6 +235,15 @@ export const SystemSettingsAppView: React.FC = () => {
   // Confirmation state for deleting window
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  // Unsaved Changes Tracking State
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Unsaved Warning Switch Dialog State
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const [pendingSelectId, setPendingSelectId] = useState<string | null>(null);
+
   useEffect(() => {
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= 768);
@@ -69,13 +253,127 @@ export const SystemSettingsAppView: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  // Filter out system_settings from the visible admin project list
+  const visibleWindowsList = windowsList.filter((w) => w.id !== 'system_settings');
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      setAuthError('');
+    if (!passwordInput) return;
+    setIsAuthenticating(true);
+    setAuthError('');
+
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: passwordInput,
+          verifyOnly: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerifiedPassword(passwordInput);
+        setIsAuthenticated(true);
+        setAuthError('');
+      } else {
+        setAuthError(data.error || 'Incorrect password');
+      }
+    } catch (err: any) {
+      setAuthError('Failed to connect to authentication server route');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!hasUnsavedChanges || saveStatus === 'saving') return;
+    setSaveStatus('saving');
+    setSaveError(null);
+
+    const activeItem = windowsList.find((w) => w.id === selectedId);
+
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: verifiedPassword,
+          windowsData: windowsList, // full list including system_settings!
+          changedEntryTitle: activeItem?.title || 'System Settings',
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSaveStatus('saved');
+        setHasUnsavedChanges(false);
+        setTimeout(() => {
+          setSaveStatus('idle');
+        }, 2500);
+      } else {
+        setSaveStatus('error');
+        setSaveError(data.error || 'Failed to save changes');
+      }
+    } catch (err: any) {
+      setSaveStatus('error');
+      setSaveError(err.message || 'Network error while saving changes');
+    }
+  };
+
+  const requestSelectEntry = (id: string | null) => {
+    if (hasUnsavedChanges) {
+      setPendingSelectId(id);
+      setShowUnsavedWarning(true);
     } else {
-      setAuthError('Incorrect password');
+      setSelectedId(id);
+    }
+  };
+
+  const confirmSwitchEntry = () => {
+    setShowUnsavedWarning(false);
+    setHasUnsavedChanges(false);
+    setSaveError(null);
+    if (pendingSelectId === 'NEW') {
+      createNewWindowInternal();
+    } else {
+      setSelectedId(pendingSelectId);
+    }
+    setPendingSelectId(null);
+  };
+
+  const createNewWindowInternal = () => {
+    const newId = `window_${Date.now().toString().slice(-5)}`;
+    const newWindow: WindowData = {
+      id: newId,
+      title: 'New Window',
+      icon: 'https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png',
+      folder: null,
+      width: 800,
+      height: 600,
+      showOnDesktop: true,
+      showInDock: false,
+      isFullScreen: false,
+      variant: null,
+      order: windowsList.length + 1,
+      visible: true,
+      content: {
+        type: 'blocks',
+        blocks: [],
+      },
+    };
+    setWindowsList((prev) => [...prev, newWindow]);
+    setSelectedId(newId);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleAddNewWindow = () => {
+    if (hasUnsavedChanges) {
+      setPendingSelectId('NEW');
+      setShowUnsavedWarning(true);
+    } else {
+      createNewWindowInternal();
     }
   };
 
@@ -98,7 +396,7 @@ export const SystemSettingsAppView: React.FC = () => {
       <div className="w-full h-full min-h-[500px] bg-[#121214] text-white/90 flex flex-col items-center justify-center p-6 select-none">
         <div className="w-full max-w-md bg-[#1e1e24] border border-white/10 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
           <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center mb-5 text-white/80 shadow-inner">
-            <Lock className="w-7 h-7" />
+            <Lock className="w-7 h-7 text-blue-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">System Settings</h1>
           <p className="text-xs text-white/50 mb-6">Enter admin password to modify system parameters</p>
@@ -109,7 +407,7 @@ export const SystemSettingsAppView: React.FC = () => {
                 type="password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="Enter password (default: admin)"
+                placeholder="Enter password"
                 className="w-full px-4 py-2.5 rounded-lg bg-black/40 border border-white/15 text-sm text-white placeholder-white/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 autoFocus
               />
@@ -119,9 +417,11 @@ export const SystemSettingsAppView: React.FC = () => {
             )}
             <button
               type="submit"
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-md transition-colors cursor-pointer"
+              disabled={isAuthenticating}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white font-medium text-sm rounded-lg shadow-md transition-colors cursor-pointer flex items-center justify-center gap-2"
             >
-              Unlock Admin Portal
+              {isAuthenticating && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>{isAuthenticating ? 'Verifying...' : 'Unlock Admin Portal'}</span>
             </button>
           </form>
         </div>
@@ -131,38 +431,15 @@ export const SystemSettingsAppView: React.FC = () => {
 
   const selectedEntry = windowsList.find((w) => w.id === selectedId) || null;
 
-  // Window Entry Handlers
-  const handleAddNewWindow = () => {
-    const newId = `window_${Date.now().toString().slice(-5)}`;
-    const newWindow: WindowData = {
-      id: newId,
-      title: 'New Window',
-      icon: 'https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png',
-      folder: null,
-      width: 800,
-      height: 600,
-      showOnDesktop: true,
-      showInDock: false,
-      isFullScreen: false,
-      variant: null,
-      order: windowsList.length + 1,
-      visible: true,
-      content: {
-        type: 'blocks',
-        blocks: [],
-      },
-    };
-    setWindowsList((prev) => [...prev, newWindow]);
-    setSelectedId(newId);
-  };
-
   const handleDeleteWindow = (id: string) => {
     const filtered = windowsList.filter((w) => w.id !== id);
     setWindowsList(filtered);
+    const visibleRemaining = filtered.filter((w) => w.id !== 'system_settings');
     if (selectedId === id) {
-      setSelectedId(filtered.length > 0 ? filtered[0].id : null);
+      setSelectedId(visibleRemaining.length > 0 ? visibleRemaining[0].id : null);
     }
     setConfirmDeleteId(null);
+    setHasUnsavedChanges(true);
   };
 
   const handleToggleVisibility = (id: string, e: React.MouseEvent) => {
@@ -170,31 +447,52 @@ export const SystemSettingsAppView: React.FC = () => {
     setWindowsList((prev) =>
       prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w))
     );
+    setHasUnsavedChanges(true);
   };
 
-  const handleMoveWindow = (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= windowsList.length) return;
-    const list = [...windowsList];
-    const temp = list[index];
-    list[index] = list[newIndex];
-    list[newIndex] = temp;
-    setWindowsList(list);
+  const handleMoveWindow = (visibleIndex: number, direction: 'up' | 'down') => {
+    const targetVisibleIndex = direction === 'up' ? visibleIndex - 1 : visibleIndex + 1;
+    if (targetVisibleIndex < 0 || targetVisibleIndex >= visibleWindowsList.length) return;
+
+    const itemA = visibleWindowsList[visibleIndex];
+    const itemB = visibleWindowsList[targetVisibleIndex];
+
+    const idxA = windowsList.findIndex((w) => w.id === itemA.id);
+    const idxB = windowsList.findIndex((w) => w.id === itemB.id);
+
+    if (idxA !== -1 && idxB !== -1) {
+      const list = [...windowsList];
+      const temp = list[idxA];
+      list[idxA] = list[idxB];
+      list[idxB] = temp;
+      setWindowsList(list);
+      setHasUnsavedChanges(true);
+    }
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
+  const handleDragStart = (visibleIndex: number) => {
+    setDraggedIndex(visibleIndex);
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = (e: React.DragEvent, visibleIndex: number) => {
     e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-    const list = [...windowsList];
-    const draggedItem = list[draggedIndex];
-    list.splice(draggedIndex, 1);
-    list.splice(index, 0, draggedItem);
-    setDraggedIndex(index);
-    setWindowsList(list);
+    if (draggedIndex === null || draggedIndex === visibleIndex) return;
+
+    const itemDragged = visibleWindowsList[draggedIndex];
+    const itemTarget = visibleWindowsList[visibleIndex];
+
+    const idxDragged = windowsList.findIndex((w) => w.id === itemDragged.id);
+    const idxTarget = windowsList.findIndex((w) => w.id === itemTarget.id);
+
+    if (idxDragged !== -1 && idxTarget !== -1) {
+      const list = [...windowsList];
+      const item = list[idxDragged];
+      list.splice(idxDragged, 1);
+      list.splice(idxTarget, 0, item);
+      setDraggedIndex(visibleIndex);
+      setWindowsList(list);
+      setHasUnsavedChanges(true);
+    }
   };
 
   const handleDragEnd = () => {
@@ -210,6 +508,7 @@ export const SystemSettingsAppView: React.FC = () => {
         return { ...w, [field]: value };
       })
     );
+    setHasUnsavedChanges(true);
   };
 
   // Selected Entry Content Block Updates
@@ -228,6 +527,7 @@ export const SystemSettingsAppView: React.FC = () => {
         };
       })
     );
+    setHasUnsavedChanges(true);
   };
 
   const handleAddBlock = () => {
@@ -292,8 +592,8 @@ export const SystemSettingsAppView: React.FC = () => {
     updateBlocks(blocks);
   };
 
-  // Folder options for dropdown
-  const folderOptions = windowsList.filter(
+  // Folder options for dropdown (excluding system_settings)
+  const folderOptions = visibleWindowsList.filter(
     (w) => w.variant === 'folder' || w.content === null
   );
 
@@ -304,18 +604,45 @@ export const SystemSettingsAppView: React.FC = () => {
         <div className="flex items-center gap-3">
           <Shield className="w-5 h-5 text-blue-400" />
           <h1 className="text-sm font-semibold tracking-wide text-white">System Settings Admin</h1>
-          <span className="text-[10px] font-mono uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">
-            In-Memory Session
-          </span>
+          {hasUnsavedChanges && (
+            <span className="text-[10px] font-mono uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+              Unsaved Changes
+            </span>
+          )}
         </div>
+
         <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40">Changes persist in state until reload</span>
+          {saveError && (
+            <span className="text-xs text-red-400 max-w-xs truncate" title={saveError}>
+              {saveError}
+            </span>
+          )}
+
           <button
-            disabled
-            className="px-4 py-1.5 bg-white/10 text-white/40 font-medium text-xs rounded-md border border-white/5 cursor-not-allowed opacity-60"
-            title="Save disabled (In-Memory pass)"
+            onClick={handleSave}
+            disabled={!hasUnsavedChanges || saveStatus === 'saving'}
+            className={`px-4 py-1.5 font-medium text-xs rounded-md transition-all flex items-center gap-1.5 ${
+              saveStatus === 'saved'
+                ? 'bg-emerald-600 text-white cursor-default'
+                : saveStatus === 'error'
+                ? 'bg-red-600 hover:bg-red-500 text-white cursor-pointer'
+                : hasUnsavedChanges
+                ? 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white cursor-pointer shadow-md'
+                : 'bg-white/10 text-white/40 border border-white/5 cursor-not-allowed opacity-60'
+            }`}
           >
-            Save
+            {saveStatus === 'saving' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {saveStatus === 'saved' && <Check className="w-3.5 h-3.5" />}
+            {saveStatus === 'error' && <RefreshCw className="w-3.5 h-3.5" />}
+            <span>
+              {saveStatus === 'saving'
+                ? 'Saving...'
+                : saveStatus === 'saved'
+                ? 'Saved!'
+                : saveStatus === 'error'
+                ? 'Retry Save'
+                : 'Save Changes'}
+            </span>
           </button>
         </div>
       </div>
@@ -328,7 +655,7 @@ export const SystemSettingsAppView: React.FC = () => {
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-white/60" />
               <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
-                Windows ({windowsList.length})
+                Windows ({visibleWindowsList.length})
               </span>
             </div>
             <button
@@ -341,16 +668,16 @@ export const SystemSettingsAppView: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {windowsList.map((entry, index) => {
+            {visibleWindowsList.map((entry, vIndex) => {
               const isSelected = selectedId === entry.id;
               return (
                 <div
                   key={entry.id}
                   draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragStart={() => handleDragStart(vIndex)}
+                  onDragOver={(e) => handleDragOver(e, vIndex)}
                   onDragEnd={handleDragEnd}
-                  onClick={() => setSelectedId(entry.id)}
+                  onClick={() => requestSelectEntry(entry.id)}
                   className={`group relative flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all border ${
                     isSelected
                       ? 'bg-blue-600/20 border-blue-500/40 text-white'
@@ -392,9 +719,9 @@ export const SystemSettingsAppView: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleMoveWindow(index, 'up');
+                          handleMoveWindow(vIndex, 'up');
                         }}
-                        disabled={index === 0}
+                        disabled={vIndex === 0}
                         className="text-white/40 hover:text-white disabled:opacity-20 cursor-pointer"
                       >
                         <ChevronUp className="w-3 h-3" />
@@ -402,9 +729,9 @@ export const SystemSettingsAppView: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleMoveWindow(index, 'down');
+                          handleMoveWindow(vIndex, 'down');
                         }}
-                        disabled={index === windowsList.length - 1}
+                        disabled={vIndex === visibleWindowsList.length - 1}
                         className="text-white/40 hover:text-white disabled:opacity-20 cursor-pointer"
                       >
                         <ChevronDown className="w-3 h-3" />
@@ -430,9 +757,36 @@ export const SystemSettingsAppView: React.FC = () => {
 
         {/* RIGHT COLUMN: Selected Entry Editor */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#141416]">
+          {/* Modal: Unsaved Changes Warning before switching entry */}
+          {showUnsavedWarning && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between text-xs text-amber-200">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>You have unsaved changes on the current entry. Switching will discard changes.</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 ml-4">
+                <button
+                  onClick={confirmSwitchEntry}
+                  className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded font-medium cursor-pointer"
+                >
+                  Discard & Switch
+                </button>
+                <button
+                  onClick={() => setShowUnsavedWarning(false)}
+                  className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
           {confirmDeleteId && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-between text-xs text-red-200">
-              <span>Are you sure you want to delete window "{windowsList.find((w) => w.id === confirmDeleteId)?.title}"?</span>
+              <span>
+                Are you sure you want to delete window &quot;
+                {windowsList.find((w) => w.id === confirmDeleteId)?.title}&quot;?
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleDeleteWindow(confirmDeleteId)}
@@ -545,25 +899,15 @@ export const SystemSettingsAppView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Icon Field + Preview */}
-                <div className="space-y-2 text-xs">
-                  <label className="block text-white/60">Icon Image URL</label>
-                  <div className="flex gap-3 items-center">
-                    <input
-                      type="text"
-                      value={selectedEntry.icon}
-                      onChange={(e) => updateSelectedField('icon', e.target.value)}
-                      className="flex-1 px-3 py-2 bg-black/40 border border-white/15 rounded-md text-white font-mono focus:outline-none focus:border-blue-500"
-                    />
-                    {selectedEntry.icon && (
-                      <img
-                        src={selectedEntry.icon}
-                        alt="Icon Preview"
-                        className="w-8 h-8 object-contain rounded bg-black/40 border border-white/20 p-1"
-                      />
-                    )}
-                  </div>
-                </div>
+                {/* Icon Field + Drag and Drop Upload */}
+                <CloudinaryUploadField
+                  label="Icon Image URL / File Upload"
+                  value={selectedEntry.icon || ''}
+                  onChange={(url) => updateSelectedField('icon', url)}
+                  placeholder="Paste image URL or drag file..."
+                  accept="image/*"
+                  resourceType="image"
+                />
 
                 {/* Checkbox Display Flags */}
                 <div className="flex flex-wrap items-center gap-6 pt-2 text-xs">
@@ -730,15 +1074,14 @@ export const SystemSettingsAppView: React.FC = () => {
 
                         {block.type === 'image' && (
                           <div className="space-y-3">
-                            <div>
-                              <label className="block text-white/60 mb-1">Image URL</label>
-                              <input
-                                type="text"
-                                value={block.src || ''}
-                                onChange={(e) => handleUpdateBlockField(bIdx, 'src', e.target.value)}
-                                className="w-full px-3 py-1.5 bg-black/40 border border-white/15 rounded text-white font-mono"
-                              />
-                            </div>
+                            <CloudinaryUploadField
+                              label="Image Source"
+                              value={block.src || ''}
+                              onChange={(url) => handleUpdateBlockField(bIdx, 'src', url)}
+                              placeholder="Image URL or drag file..."
+                              accept="image/*"
+                              resourceType="image"
+                            />
                             {block.src && (
                               <div className="mt-2">
                                 <img
@@ -795,14 +1138,13 @@ export const SystemSettingsAppView: React.FC = () => {
                               <span className="text-[10px] uppercase font-semibold text-white/40">
                                 Image A
                               </span>
-                              <input
-                                type="text"
-                                placeholder="Image A URL"
+                              <CloudinaryUploadField
+                                label="Image A Source"
                                 value={block.srcA || ''}
-                                onChange={(e) =>
-                                  handleUpdateBlockField(bIdx, 'srcA', e.target.value)
-                                }
-                                className="w-full px-2.5 py-1.5 bg-black/40 border border-white/15 rounded text-white font-mono"
+                                onChange={(url) => handleUpdateBlockField(bIdx, 'srcA', url)}
+                                placeholder="Image A URL or drag file..."
+                                accept="image/*"
+                                resourceType="image"
                               />
                               {block.srcA && (
                                 <img
@@ -826,14 +1168,13 @@ export const SystemSettingsAppView: React.FC = () => {
                               <span className="text-[10px] uppercase font-semibold text-white/40">
                                 Image B
                               </span>
-                              <input
-                                type="text"
-                                placeholder="Image B URL"
+                              <CloudinaryUploadField
+                                label="Image B Source"
                                 value={block.srcB || ''}
-                                onChange={(e) =>
-                                  handleUpdateBlockField(bIdx, 'srcB', e.target.value)
-                                }
-                                className="w-full px-2.5 py-1.5 bg-black/40 border border-white/15 rounded text-white font-mono"
+                                onChange={(url) => handleUpdateBlockField(bIdx, 'srcB', url)}
+                                placeholder="Image B URL or drag file..."
+                                accept="image/*"
+                                resourceType="image"
                               />
                               {block.srcB && (
                                 <img
@@ -857,26 +1198,22 @@ export const SystemSettingsAppView: React.FC = () => {
 
                         {block.type === 'video' && (
                           <div className="space-y-3">
-                            <div>
-                              <label className="block text-white/60 mb-1">Video Source URL</label>
-                              <input
-                                type="text"
-                                value={block.src || ''}
-                                onChange={(e) => handleUpdateBlockField(bIdx, 'src', e.target.value)}
-                                className="w-full px-3 py-1.5 bg-black/40 border border-white/15 rounded text-white font-mono"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-white/60 mb-1">Poster Image URL</label>
-                              <input
-                                type="text"
-                                value={block.poster || ''}
-                                onChange={(e) =>
-                                  handleUpdateBlockField(bIdx, 'poster', e.target.value)
-                                }
-                                className="w-full px-3 py-1.5 bg-black/40 border border-white/15 rounded text-white font-mono"
-                              />
-                            </div>
+                            <CloudinaryUploadField
+                              label="Video Source"
+                              value={block.src || ''}
+                              onChange={(url) => handleUpdateBlockField(bIdx, 'src', url)}
+                              placeholder="Video URL or drag file..."
+                              accept="video/*"
+                              resourceType="video"
+                            />
+                            <CloudinaryUploadField
+                              label="Poster Image Source"
+                              value={block.poster || ''}
+                              onChange={(url) => handleUpdateBlockField(bIdx, 'poster', url)}
+                              placeholder="Poster image URL or drag file..."
+                              accept="image/*"
+                              resourceType="image"
+                            />
                             <div className="flex items-center gap-6 pt-1">
                               <label className="flex items-center gap-2 cursor-pointer">
                                 <input
