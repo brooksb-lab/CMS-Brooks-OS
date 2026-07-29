@@ -20,6 +20,7 @@ import { CloAppView } from '@/src/components/CloAppView';
 import { FloraAppView } from '@/src/components/FloraAppView';
 import { StickiesAppView } from '@/src/components/StickiesAppView';
 import { DesktopFolderView } from '@/src/components/DesktopFolderView';
+import { windowsRegistryData, resolveWindowComponent, DOCK_ORDER as DESKTOP_DOCK_ORDER, MOBILE_DOCK_ORDER } from '@/src/data/windowLoader';
 
 // App Components
 const GenericApp = ({ title, subtitle, description, details, icon, ...props }: any) => (
@@ -523,227 +524,38 @@ const DesktopApp = () => {
 
     window.addEventListener('resize', handleResize);
 
-    // Macintosh HD -> Archive
-    registerWindow({
-      id: 'macintosh_hd', title: 'Archive',
-      icon: ICONS.macintosh,
-      initialX: initialMap['macintosh_hd']?.x, 
-      initialY: initialMap['macintosh_hd']?.y,
-      showInDock: false,
-      width: 800, height: 600,
-      variant: 'folder',
-      component: <FinderWindowView initialPath="Archive" />
-    });
+    // Register all windows from registry data (Step B)
+    windowsRegistryData.forEach(entry => {
+      const derivedFolderContents = windowsRegistryData
+        .filter(w => w.folder === entry.id)
+        .map(w => w.id);
 
-    registerWindow({ 
-      id: 'trash', title: 'Trash', 
-      icon: 'https://res.cloudinary.com/dezas8twg/image/upload/v1778118599/Trash_ysly9w.png',
-      initialX: 100, 
-      initialY: 100,
-      showInDock: false,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      variant: 'folder',
-      component: <FinderWindowView initialPath="Trash" />
-    });
+      let initX: number | undefined = initialMap[entry.id]?.x;
+      let initY: number | undefined = initialMap[entry.id]?.y;
 
-    registerWindow({
-      id: 'stickies', title: 'Sticky',
-      icon: ICONS.stickies,
-      initialX: window.innerWidth * 0.438,
-      initialY: 108,
-      showInDock: false,
-      showOnDesktop: false, // The image doesn't show a Stickies icon on desktop
-      width: 300, height: 236,
-      component: <StickiesAppView />
-    });
+      if (entry.id === 'trash') {
+        initX = 100;
+        initY = 100;
+      } else if (entry.id === 'stickies') {
+        initX = window.innerWidth * 0.438;
+        initY = 108;
+      }
 
-    registerWindow({ 
-      id: '3d_design', title: 'Form', 
-      icon: ICONS.threeDDesign, 
-      initialX: initialMap['3d_design']?.x, 
-      initialY: initialMap['3d_design']?.y,
-      width: 800, height: 600,
-      component: <GenericApp title="Form" subtitle="Identity Portal" description="Bio and contact information" details="Identity > Portal" icon={ICONS.threeDDesign} /> 
-    });
-
-    registerWindow({ 
-      id: 'scatter', title: 'SCATTER', 
-      icon: ICONS.project, 
-      initialX: initialMap['scatter']?.x, 
-      initialY: initialMap['scatter']?.y,
-      width: 800, height: 600,
-      component: <GenericApp title="SCATTER" subtitle="Project Showcase" description="3D turnarounds and rotations" details="3D > Showcase" icon={ICONS.project} /> 
-    });
-
-    registerWindow({ 
-      id: 'concept_design', title: 'Concept', 
-      icon: ICONS.conceptDesign, 
-      initialX: initialMap['concept_design']?.x, 
-      initialY: initialMap['concept_design']?.y,
-      width: 800, height: 600,
-      component: <GenericApp title="Concept" subtitle="Experiment Archive" description="Collection of experiments" details="Archive > Concepts" icon={ICONS.conceptDesign} /> 
-    });
-
-    registerWindow({ 
-      id: 'film', title: 'FILM', 
-      icon: ICONS.folder, 
-      initialX: initialMap['film']?.x, 
-      initialY: initialMap['film']?.y,
-      width: 500, height: 350,
-      variant: 'folder',
-      folderContents: ['old_gold', 'fmsb', 'problemista', 'spaceman', 'sekiro'],
-      component: null
-    });
-
-    registerWindow({ 
-      id: 'apparel', title: 'APPAREL', 
-      icon: ICONS.folder, 
-      initialX: initialMap['apparel']?.x, 
-      initialY: initialMap['apparel']?.y,
-      width: 500, height: 350,
-      variant: 'folder',
-      folderContents: ['sacca_macana', 'adriatissimo'],
-      component: null
-    });
-
-    registerWindow({ 
-      id: 'on_no', title: 'ON:NO', 
-      icon: ICONS.onno, 
-      initialX: initialMap['on_no']?.x, 
-      initialY: initialMap['on_no']?.y,
-      isFullScreen: true,
-      component: <FullscreenProject title="ON:NO" subtitle="Brand Portal" description="Immersive brand experience" /> 
-    });
-
-    registerWindow({ 
-      id: 'resume', title: 'RESUME', 
-      icon: ICONS.project, 
-      showOnDesktop: false,
-      initialX: initialMap['resume']?.x, 
-      initialY: initialMap['resume']?.y,
-      width: 600, height: 700,
-      component: <AppTypeWindow title="RESUME" subtitle="Resume Document" description="PDF export available" /> 
-    });
-    registerWindow({ 
-      id: 'problemista', title: 'PROBLEMISTA', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="PROBLEMISTA" subtitle="Concept Designs" description="Gallery showcase" details="Gallery > Concept" icon={ICONS.project} /> 
-    });
-    registerWindow({ 
-      id: 'spaceman', title: 'SPACEMAN', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="SPACEMAN" subtitle="Concept Designs" description="Gallery showcase" details="Gallery > Concept" icon={ICONS.project} /> 
-    });
-    registerWindow({ 
-      id: 'fmsb', title: 'FMSB', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="FMSB" subtitle="Concept Designs" description="Gallery showcase" details="Gallery > Concept" icon={ICONS.project} /> 
-    });
-    registerWindow({ 
-      id: 'old_gold', title: 'OLD GOLD MOUNTAIN', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="OLD GOLD MOUNTAIN" subtitle="Locked Access" description="Restricted placeholder" details="Access > Restricted" icon={ICONS.project} /> 
-    });
-    registerWindow({ 
-      id: 'sekiro', title: 'SEKIRO', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="SEKIRO" subtitle="Locked Access" description="Restricted placeholder" details="Access > Restricted" icon={ICONS.project} /> 
-    });
-    registerWindow({ 
-      id: 'sacca_macana', title: 'SACCA MACANA', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="SACCA MACANA" subtitle="Locked Access" description="Restricted placeholder" details="Access > Restricted" icon={ICONS.project} /> 
-    });
-    registerWindow({ 
-      id: 'adriatissimo', title: 'ADRIATISSIMO', 
-      icon: ICONS.project, 
-      initialX: 0, initialY: 0,
-      showOnDesktop: false,
-      width: 800, height: 600,
-      component: <GenericApp title="ADRIATISSIMO" subtitle="Locked Access" description="Restricted placeholder" details="Access > Restricted" icon={ICONS.project} /> 
-    });
-
-    registerWindow({ 
-      id: 'spotify', title: 'Spotify', 
-      icon: ICONS.spotify, 
-      showOnDesktop: false, showInDock: true,
-      width: 400, height: 600,
-      component: <SpotifyAppView /> 
-    });
-    registerWindow({ 
-      id: 'freeform', title: 'Notes', 
-      icon: ICONS.note, 
-      showOnDesktop: false, showInDock: true,
-      width: 800, height: 600,
-      component: <NotesApp /> 
-    });
-
-    // Red (Fullscreen by default project)
-    // No-op for on_no here as it's already registered above with spatial logic
-
-    // Dock specific apps
-    registerWindow({ 
-      id: 'clo', title: 'Form', 
-      icon: ICONS.clo, 
-      showOnDesktop: false, showInDock: true,
-      width: 1000, height: 700,
-      component: <CloAppView /> 
-    });
-    registerWindow({ 
-      id: 'photoshop', title: 'Surface', 
-      icon: ICONS.photoshop, 
-      showOnDesktop: false, showInDock: true,
-      width: 1000, height: 700,
-      component: <PhotoshopView /> 
-    });
-    registerWindow({ 
-      id: 'flora_ai', title: 'Flow', 
-      icon: ICONS.flora, 
-      showOnDesktop: false, showInDock: true,
-      width: 1000, height: 750,
-      component: <FloraAppView /> 
-    });
-    registerWindow({ 
-      id: 'contact_folder', title: 'Contact', 
-      icon: ICONS.folder, 
-      showOnDesktop: false, showInDock: true,
-      width: 500, height: 350,
-      variant: 'folder',
-      folderContents: ['mail', 'brooks_chat', 'freeform', 'spotify'],
-      component: null
-    });
-    registerWindow({ 
-      id: 'mail', title: 'Contact', 
-      icon: ICONS.mail, 
-      showOnDesktop: false, showInDock: true,
-      width: 800, height: 600,
-      component: <MailAppView /> 
-    });
-    registerWindow({ 
-      id: 'brooks_chat', title: 'Chat', 
-      icon: ICONS.imessage, 
-      showOnDesktop: false, showInDock: true,
-      width: 700, height: 750,
-      component: <MessagesApp /> 
+      registerWindow({
+        id: entry.id,
+        title: entry.title,
+        icon: entry.icon,
+        initialX: initX,
+        initialY: initY,
+        showOnDesktop: entry.showOnDesktop,
+        showInDock: entry.showInDock,
+        isFullScreen: entry.isFullScreen,
+        width: entry.width ?? undefined,
+        height: entry.height ?? undefined,
+        variant: entry.variant === 'folder' ? 'folder' : undefined,
+        folderContents: derivedFolderContents.length > 0 ? derivedFolderContents : undefined,
+        component: resolveWindowComponent(entry)
+      });
     });
 
     return () => {
@@ -753,9 +565,6 @@ const DesktopApp = () => {
 
   const appList = Object.values(windows) as WindowState[];
   const desktopApps = appList.filter(app => app.showOnDesktop !== false);
-  
-  const DESKTOP_DOCK_ORDER = ['clo', 'photoshop', 'flora_ai', 'mail', 'brooks_chat', 'freeform', 'spotify'];
-  const MOBILE_DOCK_ORDER = ['clo', 'photoshop', 'flora_ai', 'contact_folder'];
   
   const currentDockOrder = isMobile ? MOBILE_DOCK_ORDER : DESKTOP_DOCK_ORDER;
   const dockApps = currentDockOrder.map(id => windows[id]).filter(app => app && app.showInDock);

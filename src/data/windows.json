@@ -1,0 +1,502 @@
+{
+  "dockOrder": [
+    "clo",
+    "photoshop",
+    "flora_ai",
+    "mail",
+    "brooks_chat",
+    "freeform",
+    "spotify"
+  ],
+  "mobileDockOrder": [
+    "clo",
+    "photoshop",
+    "flora_ai",
+    "contact_folder"
+  ],
+  "windows": [
+    {
+      "id": "3d_design",
+      "title": "Form",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921909/BrooksOS_0011_3D-Design_cmo4xg.png",
+      "folder": null,
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 1,
+      "visible": true,
+      "subtitle": "Identity Portal",
+      "description": "Bio and contact information",
+      "details": "Identity > Portal",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "scatter",
+      "title": "SCATTER",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": null,
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 2,
+      "visible": true,
+      "subtitle": "Project Showcase",
+      "description": "3D turnarounds and rotations",
+      "details": "3D > Showcase",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "concept_design",
+      "title": "Concept",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1778440702/BrooksOS_0008_Concper-Design2_wy9jtb.png",
+      "folder": null,
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 3,
+      "visible": true,
+      "subtitle": "Experiment Archive",
+      "description": "Collection of experiments",
+      "details": "Archive > Concepts",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "on_no",
+      "title": "ON:NO",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0007_ONNO-copy_oo8j1q.png",
+      "folder": null,
+      "width": null,
+      "height": null,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": true,
+      "variant": null,
+      "order": 4,
+      "visible": true,
+      "subtitle": "Brand Portal",
+      "description": "Immersive brand experience",
+      "details": null,
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "resume",
+      "title": "RESUME",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": null,
+      "width": 600,
+      "height": 700,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 5,
+      "visible": true,
+      "subtitle": "Resume Document",
+      "description": "PDF export available",
+      "details": null,
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "problemista",
+      "title": "PROBLEMISTA",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 6,
+      "visible": true,
+      "subtitle": "Concept Designs",
+      "description": "Gallery showcase",
+      "details": "Gallery > Concept",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "spaceman",
+      "title": "SPACEMAN",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 7,
+      "visible": true,
+      "subtitle": "Concept Designs",
+      "description": "Gallery showcase",
+      "details": "Gallery > Concept",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "fmsb",
+      "title": "FMSB",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 8,
+      "visible": true,
+      "subtitle": "Concept Designs",
+      "description": "Gallery showcase",
+      "details": "Gallery > Concept",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "old_gold",
+      "title": "OLD GOLD MOUNTAIN",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 9,
+      "visible": true,
+      "subtitle": "Locked Access",
+      "description": "Restricted placeholder",
+      "details": "Access > Restricted",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "sekiro",
+      "title": "SEKIRO",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "film",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 10,
+      "visible": true,
+      "subtitle": "Locked Access",
+      "description": "Restricted placeholder",
+      "details": "Access > Restricted",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "sacca_macana",
+      "title": "SACCA MACANA",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "apparel",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 11,
+      "visible": true,
+      "subtitle": "Locked Access",
+      "description": "Restricted placeholder",
+      "details": "Access > Restricted",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "adriatissimo",
+      "title": "ADRIATISSIMO",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png",
+      "folder": "apparel",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 12,
+      "visible": true,
+      "subtitle": "Locked Access",
+      "description": "Restricted placeholder",
+      "details": "Access > Restricted",
+      "content": {
+        "type": "blocks",
+        "blocks": []
+      }
+    },
+    {
+      "id": "macintosh_hd",
+      "title": "Archive",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0000_Macintosh-HD_qdutk7.png",
+      "folder": null,
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": "folder",
+      "order": 13,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "FinderWindowView",
+        "props": {
+          "initialPath": "Archive"
+        }
+      }
+    },
+    {
+      "id": "trash",
+      "title": "Trash",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1778118599/Trash_ysly9w.png",
+      "folder": null,
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": "folder",
+      "order": 14,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "FinderWindowView",
+        "props": {
+          "initialPath": "Trash"
+        }
+      }
+    },
+    {
+      "id": "stickies",
+      "title": "Sticky",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1778439408/Sticky_zdp4zj.svg",
+      "folder": null,
+      "width": 300,
+      "height": 236,
+      "showOnDesktop": false,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 15,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "StickiesAppView"
+      }
+    },
+    {
+      "id": "film",
+      "title": "FILM",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0003_Folder_tptbpo.png",
+      "folder": null,
+      "width": 500,
+      "height": 350,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": "folder",
+      "order": 16,
+      "visible": true,
+      "content": null
+    },
+    {
+      "id": "apparel",
+      "title": "APPAREL",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0003_Folder_tptbpo.png",
+      "folder": null,
+      "width": 500,
+      "height": 350,
+      "showOnDesktop": true,
+      "showInDock": false,
+      "isFullScreen": false,
+      "variant": "folder",
+      "order": 17,
+      "visible": true,
+      "content": null
+    },
+    {
+      "id": "spotify",
+      "title": "Spotify",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0001_Spotify_yvwcbf.png",
+      "folder": "contact_folder",
+      "width": 400,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 18,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "SpotifyAppView"
+      }
+    },
+    {
+      "id": "freeform",
+      "title": "Notes",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0002_3840px-Apple_Notes_icon.svg_wqze4q.png",
+      "folder": "contact_folder",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 19,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "NotesApp"
+      }
+    },
+    {
+      "id": "clo",
+      "title": "Form",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921907/BrooksOS_0014_CLO_b2tibj.png",
+      "folder": null,
+      "width": 1000,
+      "height": 700,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 20,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "CloAppView"
+      }
+    },
+    {
+      "id": "photoshop",
+      "title": "Surface",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1778400134/BrooksOS_0013_Surface_hxvcao.png",
+      "folder": null,
+      "width": 1000,
+      "height": 700,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 21,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "PhotoshopView"
+      }
+    },
+    {
+      "id": "flora_ai",
+      "title": "Flow",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1778404806/Flow_wappha.svg",
+      "folder": null,
+      "width": 1000,
+      "height": 750,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 22,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "FloraAppView"
+      }
+    },
+    {
+      "id": "contact_folder",
+      "title": "Contact",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0003_Folder_tptbpo.png",
+      "folder": null,
+      "width": 500,
+      "height": 350,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": "folder",
+      "order": 23,
+      "visible": true,
+      "content": null
+    },
+    {
+      "id": "mail",
+      "title": "Contact",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0005_Mail_zpuiac.png",
+      "folder": "contact_folder",
+      "width": 800,
+      "height": 600,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 24,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "MailAppView"
+      }
+    },
+    {
+      "id": "brooks_chat",
+      "title": "Chat",
+      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0010_iMessage_ytpuio.png",
+      "folder": "contact_folder",
+      "width": 700,
+      "height": 750,
+      "showOnDesktop": false,
+      "showInDock": true,
+      "isFullScreen": false,
+      "variant": null,
+      "order": 25,
+      "visible": true,
+      "content": {
+        "type": "component",
+        "name": "MessagesApp"
+      }
+    }
+  ]
+}

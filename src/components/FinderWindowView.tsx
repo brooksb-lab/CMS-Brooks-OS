@@ -20,7 +20,8 @@ interface FinderWindowViewProps {
 const GENERIC_FOLDER_ICON = "https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0003_Folder_tptbpo.png";
 const GENERIC_DOC_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="12" y="6" width="40" height="52" rx="4" fill="%23f0f0f0" stroke="%23cccccc" stroke-width="1.5"/><path d="M38 6 L52 20 L38 20 Z" fill="%23e0e0e0"/><path d="M38 6 L38 20 L52 20" fill="none" stroke="%23cccccc" stroke-width="1.5"/></svg>';
 
-const DOCK_ORDER = ['clo', 'photoshop', 'flora_ai', 'mail', 'brooks_chat', 'freeform', 'spotify'];
+import windowsConfig from '../data/windows.json';
+const DOCK_ORDER = windowsConfig.dockOrder || ['clo', 'photoshop', 'flora_ai', 'mail', 'brooks_chat', 'freeform', 'spotify'];
 
 export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
   initialPath = 'Archive',
