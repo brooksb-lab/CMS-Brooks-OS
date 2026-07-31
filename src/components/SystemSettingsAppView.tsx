@@ -27,6 +27,7 @@ interface WindowData {
   content: {
     type: 'blocks' | 'component' | string;
     name?: string;
+    text?: string;
     blocks?: Block[];
     props?: Record<string, any>;
   } | null;
@@ -530,6 +531,23 @@ export const SystemSettingsAppView: React.FC = () => {
     setHasUnsavedChanges(true);
   };
 
+  const updateComponentText = (textValue: string) => {
+    if (!selectedId || !selectedEntry || selectedEntry.content?.type !== 'component') return;
+    setWindowsList((prev) =>
+      prev.map((w) => {
+        if (w.id !== selectedId) return w;
+        return {
+          ...w,
+          content: {
+            ...(w.content || { type: 'component' }),
+            text: textValue,
+          },
+        };
+      })
+    );
+    setHasUnsavedChanges(true);
+  };
+
   const handleAddBlock = () => {
     if (!selectedEntry || selectedEntry.content?.type !== 'blocks') return;
     const currentBlocks = selectedEntry.content?.blocks || [];
@@ -975,9 +993,9 @@ export const SystemSettingsAppView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Case 1: Custom Component Read-Only */}
+                {/* Case 1: Custom Component View */}
                 {selectedEntry.content?.type === 'component' && (
-                  <div className="p-4 bg-white/5 rounded-lg border border-white/10 space-y-2 text-xs">
+                  <div className="p-4 bg-white/5 rounded-lg border border-white/10 space-y-3 text-xs">
                     <div className="flex items-center gap-2 text-amber-400 font-medium">
                       <FileText className="w-4 h-4" />
                       <span>Custom Component View</span>
@@ -988,9 +1006,23 @@ export const SystemSettingsAppView: React.FC = () => {
                         {selectedEntry.content.name || 'Unspecified'}
                       </span>
                     </p>
-                    <p className="text-white/40 italic">
-                      This entry renders a custom React component and does not use the Block Editor.
-                    </p>
+                    {selectedEntry.content.text !== undefined ? (
+                      <div className="space-y-1.5 pt-1">
+                        <label className="block text-white/60 font-medium">Text Content</label>
+                        <textarea
+                          rows={6}
+                          value={selectedEntry.content.text || ''}
+                          onChange={(e) => updateComponentText(e.target.value)}
+                          className="w-full px-3 py-2 bg-black/40 border border-white/15 rounded-md text-white font-mono text-xs focus:outline-none focus:border-blue-500 whitespace-pre"
+                          placeholder="Enter text..."
+                          spellCheck={false}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-white/40 italic">
+                        This entry renders a custom React component and does not use the Block Editor.
+                      </p>
+                    )}
                   </div>
                 )}
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 interface StickiesAppViewProps {
+  text?: string;
   onClose?: () => void;
   onMinimize?: () => void;
   onMaximize?: () => void;
@@ -8,12 +9,14 @@ interface StickiesAppViewProps {
 }
 
 export const StickiesAppView: React.FC<StickiesAppViewProps> = ({
+  text,
   onClose,
   onMaximize,
   resizeWindow,
 }) => {
   const [content, setContent] = useState(
-    "folders: working\napps: working\nshop: in progress\narchive: still a mess, fix before launch\nscatter: swap images\nnote: leave this one up",
+    text ??
+      "folders: working\napps: working\nshop: in progress\narchive: still a mess, fix before launch\nscatter: swap images\nnote: leave this one up",
   );
 
   const [isCollapsed, setIsCollapsed] = useState(false);

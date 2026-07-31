@@ -17,6 +17,7 @@ import { BlockRenderer } from '@/src/components/BlockRenderer';
 export interface WindowContentConfig {
   type: 'blocks' | 'component' | string;
   name?: string;
+  text?: string;
   blocks?: any[];
   props?: Record<string, any>;
 }
@@ -61,7 +62,11 @@ export function resolveWindowComponent(entry: WindowDataEntry): React.ReactNode 
   if (entry.content.type === 'component' && entry.content.name) {
     const Component = COMPONENT_MAP[entry.content.name];
     if (Component) {
-      return <Component {...(entry.content.props || {})} />;
+      const componentProps = {
+        ...(entry.content.props || {}),
+        ...(entry.content.text !== undefined ? { text: entry.content.text } : {}),
+      };
+      return <Component {...componentProps} />;
     }
   }
 

@@ -122,13 +122,6 @@
                 "value": "Archive > Concepts"
               }
             ]
-          },
-          {
-            "type": "image",
-            "src": "https://res.cloudinary.com/dezas8twg/image/upload/v1785471582/jappjkgwhgdzr2mrvvuu.png",
-            "alt": "",
-            "caption": "",
-            "width": "full"
           }
         ]
       }
@@ -515,7 +508,8 @@
       "visible": true,
       "content": {
         "type": "component",
-        "name": "StickiesAppView"
+        "name": "StickiesAppView",
+        "text": "folders: working\napps: working\nshop: in progress\narchive: still a mess, fix before launch\nscatter: swap images\nnote: leave this one up"
       }
     },
     {
