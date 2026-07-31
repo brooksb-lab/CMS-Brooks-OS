@@ -163,21 +163,63 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
     }
 
     if (p === 'Archive' || p === 'macintosh_hd') {
-      return [
-        { id: 'Applications', title: 'Applications', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-        { id: 'Library', title: 'Library', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-        { id: 'System', title: 'System', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-        { id: 'Users', title: 'Users', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-        ...(windows['resume'] && !windows['resume'].trashed
-          ? [
-              {
-                id: 'resume',
-                title: windows['resume'].title,
-                icon: windows['resume'].icon,
-              },
-            ]
-          : []),
-      ];
+      const archiveItems: FolderItem[] = [];
+
+      // 1. Desktop virtual item
+      if (!windows['desktop']?.trashed) {
+        archiveItems.push({
+          id: 'Desktop',
+          title: 'Desktop',
+          icon: windows['desktop']?.icon || GENERIC_FOLDER_ICON,
+          variant: 'folder',
+        });
+      }
+
+      // 2. Applications virtual item
+      archiveItems.push({
+        id: 'Applications',
+        title: 'Applications',
+        icon: GENERIC_FOLDER_ICON,
+        variant: 'folder',
+      });
+
+      // 3. Every folder entry with showInSidebar true, sorted by order
+      const sidebarFolders = Object.values(windows)
+        .filter((app: any) => app && app.variant === 'folder' && app.showInSidebar === true && !app.trashed)
+        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+        .map((app: any) => ({
+          id: app.id,
+          title: app.title || app.id,
+          icon: app.icon || GENERIC_FOLDER_ICON,
+          variant: app.variant,
+          folderContents: app.folderContents,
+        }));
+      archiveItems.push(...sidebarFolders);
+
+      // 4. Every entry whose folder field is macintosh_hd, sorted by order
+      const sidebarFolderIds = new Set(sidebarFolders.map((sf) => sf.id));
+      const macHdItems = Object.values(windows)
+        .filter(
+          (app: any) =>
+            app &&
+            (app.folder === 'macintosh_hd' || app.folder === 'Archive') &&
+            !app.trashed &&
+            app.id !== 'desktop' &&
+            app.id !== 'Desktop' &&
+            app.id !== 'Applications' &&
+            !sidebarFolderIds.has(app.id)
+        )
+        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+        .map((app: any) => ({
+          id: app.id,
+          title: app.title || app.id,
+          icon: app.icon || GENERIC_DOC_ICON,
+          variant: app.variant,
+          folderContents: app.folderContents,
+        }));
+      archiveItems.push(...macHdItems);
+
+      return archiveItems;
     }
 
     if (p === 'Trash' || p === 'trash') {
