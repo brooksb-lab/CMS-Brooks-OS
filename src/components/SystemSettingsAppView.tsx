@@ -252,6 +252,16 @@ export const SystemSettingsAppView: React.FC = () => {
     return JSON.parse(JSON.stringify(windowsConfig.windows)) as WindowData[];
   });
 
+  // Dock Order State
+  const [dockOrder, setDockOrder] = useState<string[]>(() => {
+    return [...((windowsConfig.dockOrder || []) as string[])];
+  });
+
+  // Desktop Order State
+  const [desktopOrder, setDesktopOrder] = useState<string[]>(() => {
+    return [...(((windowsConfig as any).desktopOrder || []) as string[])];
+  });
+
   // Selected Window ID
   const [selectedId, setSelectedId] = useState<string | null>(() => {
     const visible = windowsConfig.windows.filter((w) => w.id !== 'system_settings');
@@ -276,9 +286,11 @@ export const SystemSettingsAppView: React.FC = () => {
   // Drag and drop state
   const [draggedEntryId, setDraggedEntryId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{
-    type: 'folder' | 'trash' | 'group_root';
+    type: 'folder' | 'trash' | 'group_root' | 'folder_nest' | 'reorder';
     id?: string;
     groupId?: string;
+    targetId?: string;
+    position?: 'above' | 'below';
   } | null>(null);
 
   // New Block Type Selection State
@@ -351,6 +363,8 @@ export const SystemSettingsAppView: React.FC = () => {
         body: JSON.stringify({
           password: verifiedPassword,
           windowsData: windowsList,
+          dockOrder,
+          desktopOrder,
           changedEntryTitle: activeItem?.title || 'System Settings',
         }),
       });
@@ -547,7 +561,10 @@ export const SystemSettingsAppView: React.FC = () => {
     updateBlocks([...currentBlocks, defaultBlock]);
   };
 
-  const handleDropAction = (target: { type: 'folder' | 'trash' | 'group_root'; id?: string }, dragId: string) => {
+  const handleDropAction = (
+    target: { type: 'folder' | 'trash' | 'group_root' | 'folder_nest' | 'reorder'; id?: string; groupId?: string },
+    dragId: string
+  ) => {
     if (!dragId) return;
 
     if (target.type === 'trash') {
@@ -631,13 +648,53 @@ export const SystemSettingsAppView: React.FC = () => {
   const visibleWindowsList = windowsList.filter((w) => w.id !== 'system_settings');
   const selectedEntry = windowsList.find((w) => w.id === selectedId) || null;
 
-  // Derive groups from current windows list
-  const dockEntries = visibleWindowsList.filter((w) => w.showInDock === true);
-  const desktopEntries = visibleWindowsList.filter((w) => w.showOnDesktop === true);
-  const projectsEntries = visibleWindowsList.filter((w) => w.content?.type === 'blocks');
-  const systemEntries = visibleWindowsList.filter(
-    (w) => !(w.showInDock || w.showOnDesktop || w.content?.type === 'blocks')
-  );
+  // Helpers to get ordered lists per group
+  const getOrderedDockEntries = (): WindowData[] => {
+    const dockWindows = visibleWindowsList.filter((w) => w.showInDock === true && !w.trashed);
+    const map = new Map<string, WindowData>(dockWindows.map((w) => [w.id, w]));
+
+    const result: WindowData[] = [];
+    for (const id of dockOrder) {
+      if (map.has(id)) {
+        result.push(map.get(id)!);
+        map.delete(id);
+      }
+    }
+    for (const w of map.values()) {
+      result.push(w);
+    }
+    return result;
+  };
+
+  const getOrderedDesktopEntries = (): WindowData[] => {
+    const desktopWindows = visibleWindowsList.filter((w) => w.showOnDesktop === true && !w.trashed);
+    const map = new Map<string, WindowData>(desktopWindows.map((w) => [w.id, w]));
+
+    const result: WindowData[] = [];
+    for (const id of desktopOrder) {
+      if (map.has(id)) {
+        result.push(map.get(id)!);
+        map.delete(id);
+      }
+    }
+    for (const w of map.values()) {
+      result.push(w);
+    }
+    return result;
+  };
+
+  const getOrderedProjectsEntries = (): WindowData[] => {
+    return visibleWindowsList
+      .filter((w) => w.content?.type === 'blocks' && !w.trashed)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  };
+
+  const getOrderedSystemEntries = (): WindowData[] => {
+    return visibleWindowsList.filter(
+      (w) => !(w.showInDock || w.showOnDesktop || w.content?.type === 'blocks') && !w.trashed
+    );
+  };
+
   const trashedEntries = visibleWindowsList.filter((w) => w.trashed === true);
 
   const folderOptions = visibleWindowsList.filter(
@@ -646,6 +703,171 @@ export const SystemSettingsAppView: React.FC = () => {
 
   const toggleGroupCollapse = (groupKey: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
+  };
+
+  const handleReorderInGroup = (
+    dragId: string,
+    targetId: string,
+    position: 'above' | 'below',
+    groupId: string
+  ) => {
+    if (dragId === targetId) return;
+
+    if (groupId === 'PROJECTS') {
+      const currentList = getOrderedProjectsEntries();
+      const existingOrders = currentList
+        .map((e) => e.order ?? 0)
+        .sort((a, b) => a - b);
+
+      const dragIdx = currentList.findIndex((e) => e.id === dragId);
+      if (dragIdx === -1) return;
+      const [draggedItem] = currentList.splice(dragIdx, 1);
+
+      let targetIdx = currentList.findIndex((e) => e.id === targetId);
+      if (targetIdx === -1) {
+        currentList.push(draggedItem);
+      } else {
+        if (position === 'below') targetIdx += 1;
+        currentList.splice(targetIdx, 0, draggedItem);
+      }
+
+      const newOrderMap = new Map<string, number>();
+      currentList.forEach((item, index) => {
+        newOrderMap.set(item.id, existingOrders[index] ?? index + 1);
+      });
+
+      setWindowsList((prev) =>
+        prev.map((w) => {
+          if (newOrderMap.has(w.id)) {
+            return { ...w, order: newOrderMap.get(w.id)! };
+          }
+          return w;
+        })
+      );
+      setHasUnsavedChanges(true);
+    } else if (groupId === 'DOCK') {
+      const currentList = getOrderedDockEntries();
+      const dragIdx = currentList.findIndex((e) => e.id === dragId);
+      if (dragIdx === -1) return;
+      const [draggedItem] = currentList.splice(dragIdx, 1);
+
+      let targetIdx = currentList.findIndex((e) => e.id === targetId);
+      if (targetIdx === -1) {
+        currentList.push(draggedItem);
+      } else {
+        if (position === 'below') targetIdx += 1;
+        currentList.splice(targetIdx, 0, draggedItem);
+      }
+
+      const newDockOrder = currentList.map((e) => e.id);
+      setDockOrder(newDockOrder);
+      setHasUnsavedChanges(true);
+    } else if (groupId === 'DESKTOP') {
+      const currentList = getOrderedDesktopEntries();
+      const dragIdx = currentList.findIndex((e) => e.id === dragId);
+      if (dragIdx === -1) return;
+      const [draggedItem] = currentList.splice(dragIdx, 1);
+
+      let targetIdx = currentList.findIndex((e) => e.id === targetId);
+      if (targetIdx === -1) {
+        currentList.push(draggedItem);
+      } else {
+        if (position === 'below') targetIdx += 1;
+        currentList.splice(targetIdx, 0, draggedItem);
+      }
+
+      const newDesktopOrder = currentList.map((e) => e.id);
+      setDesktopOrder(newDesktopOrder);
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  const handleRowDragOver = (
+    e: React.DragEvent,
+    entry: WindowData,
+    groupId: string,
+    isFolder: boolean
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!draggedEntryId || draggedEntryId === entry.id) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetY = e.clientY - rect.top;
+    const height = rect.height;
+
+    if (isFolder) {
+      if (offsetY < height * 0.25) {
+        setDropTarget({
+          type: 'reorder',
+          groupId,
+          targetId: entry.id,
+          position: 'above',
+        });
+      } else if (offsetY > height * 0.75) {
+        setDropTarget({
+          type: 'reorder',
+          groupId,
+          targetId: entry.id,
+          position: 'below',
+        });
+      } else {
+        if (!isDescendant(draggedEntryId, entry.id, windowsList)) {
+          setDropTarget({
+            type: 'folder_nest',
+            id: entry.id,
+          });
+        }
+      }
+    } else {
+      if (offsetY < height * 0.5) {
+        setDropTarget({
+          type: 'reorder',
+          groupId,
+          targetId: entry.id,
+          position: 'above',
+        });
+      } else {
+        setDropTarget({
+          type: 'reorder',
+          groupId,
+          targetId: entry.id,
+          position: 'below',
+        });
+      }
+    }
+  };
+
+  const handleRowDrop = (
+    e: React.DragEvent,
+    entry: WindowData,
+    groupId: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!draggedEntryId || draggedEntryId === entry.id) {
+      setDraggedEntryId(null);
+      setDropTarget(null);
+      return;
+    }
+
+    if (dropTarget?.type === 'folder_nest' && dropTarget.id) {
+      handleDropAction({ type: 'folder', id: dropTarget.id }, draggedEntryId);
+    } else if (dropTarget?.type === 'reorder' && dropTarget.targetId) {
+      handleReorderInGroup(
+        draggedEntryId,
+        dropTarget.targetId,
+        dropTarget.position || 'above',
+        groupId
+      );
+    } else {
+      handleDropAction({ type: 'group_root', groupId }, draggedEntryId);
+    }
+
+    setDraggedEntryId(null);
+    setDropTarget(null);
   };
 
   const renderItemRow = (
@@ -661,10 +883,31 @@ export const SystemSettingsAppView: React.FC = () => {
 
     const childrenInGroup = entriesInGroup.filter((e) => e.folder === entry.id);
     const hasChildren = childrenInGroup.length > 0;
-    const isTargetFolder = dropTarget?.type === 'folder' && dropTarget?.id === entry.id;
+
+    const isTargetReorderAbove =
+      dropTarget?.type === 'reorder' &&
+      dropTarget?.targetId === entry.id &&
+      dropTarget?.position === 'above';
+
+    const isTargetReorderBelow =
+      dropTarget?.type === 'reorder' &&
+      dropTarget?.targetId === entry.id &&
+      dropTarget?.position === 'below';
+
+    const isTargetNestFolder =
+      dropTarget?.type === 'folder_nest' && dropTarget?.id === entry.id;
+
+    const isNotInDockOrder = groupId === 'DOCK' && !dockOrder.includes(entry.id);
 
     return (
-      <div key={`${groupId}-${entry.id}`} className="flex flex-col">
+      <div key={`${groupId}-${entry.id}`} className="flex flex-col relative">
+        {isTargetReorderAbove && (
+          <div className="absolute -top-0.5 left-1 right-1 h-0.5 bg-blue-500 rounded-full z-30 pointer-events-none flex items-center justify-between">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 -ml-0.5" />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 -mr-0.5" />
+          </div>
+        )}
+
         <div
           draggable
           onDragStart={(e) => {
@@ -672,45 +915,26 @@ export const SystemSettingsAppView: React.FC = () => {
             setDraggedEntryId(entry.id);
             e.dataTransfer.setData('text/plain', entry.id);
           }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (
-              isFolder &&
-              draggedEntryId &&
-              draggedEntryId !== entry.id &&
-              !isDescendant(draggedEntryId, entry.id, windowsList)
-            ) {
-              setDropTarget({ type: 'folder', id: entry.id });
-            }
-          }}
+          onDragOver={(e) => handleRowDragOver(e, entry, groupId, isFolder)}
           onDragLeave={(e) => {
             e.stopPropagation();
-            if (dropTarget?.type === 'folder' && dropTarget?.id === entry.id) {
-              setDropTarget(null);
-            }
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
             if (
-              draggedEntryId &&
-              isFolder &&
-              draggedEntryId !== entry.id &&
-              !isDescendant(draggedEntryId, entry.id, windowsList)
+              (dropTarget?.type === 'reorder' && dropTarget?.targetId === entry.id) ||
+              (dropTarget?.type === 'folder_nest' && dropTarget?.id === entry.id)
             ) {
-              handleDropAction({ type: 'folder', id: entry.id }, draggedEntryId);
-              setDraggedEntryId(null);
               setDropTarget(null);
             }
           }}
+          onDrop={(e) => handleRowDrop(e, entry, groupId)}
           onClick={() => requestSelectEntry(entry.id)}
           style={{ paddingLeft: `${8 + depth * 14}px` }}
           className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all border ${
-            isTargetFolder
-              ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-500 text-white'
+            isTargetNestFolder
+              ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-500/50 text-white'
               : isSelected
               ? 'bg-blue-600/20 border-blue-500/40 text-white'
+              : isNotInDockOrder
+              ? 'bg-white/[0.02] hover:bg-white/10 border-transparent text-white/50'
               : 'bg-white/5 hover:bg-white/10 border-transparent text-white/80'
           } ${isTrashed ? 'opacity-50 hover:opacity-80' : ''}`}
         >
@@ -745,8 +969,20 @@ export const SystemSettingsAppView: React.FC = () => {
             )}
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-medium truncate">{entry.title}</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`text-xs font-medium truncate ${isNotInDockOrder ? 'text-white/60' : ''}`}>
+                  {entry.title}
+                </span>
+                {isNotInDockOrder && (
+                  <span className="inline-flex items-center text-[9px] text-white/40 bg-white/5 px-1.5 py-0.2 rounded border border-white/10 shrink-0 italic">
+                    not in dock order
+                  </span>
+                )}
+                {isTargetNestFolder && (
+                  <span className="inline-flex items-center text-[9px] text-amber-300 bg-amber-500/20 px-1 py-0.2 rounded border border-amber-500/30 shrink-0 font-mono">
+                    nest inside
+                  </span>
+                )}
                 {isTrashed && (
                   <span className="inline-flex items-center gap-0.5 text-[9px] text-red-400 bg-red-500/10 px-1 py-0.2 rounded border border-red-500/20 shrink-0">
                     <Trash2 className="w-2.5 h-2.5" />
@@ -773,6 +1009,13 @@ export const SystemSettingsAppView: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {isTargetReorderBelow && (
+          <div className="absolute -bottom-0.5 left-1 right-1 h-0.5 bg-blue-500 rounded-full z-30 pointer-events-none flex items-center justify-between">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 -ml-0.5" />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 -mr-0.5" />
+          </div>
+        )}
 
         {isFolder && !isCollapsed && hasChildren && (
           <div className="space-y-1 mt-1">
@@ -815,7 +1058,7 @@ export const SystemSettingsAppView: React.FC = () => {
             e.preventDefault();
             e.stopPropagation();
             if (draggedEntryId) {
-              handleDropAction({ type: 'group_root' }, draggedEntryId);
+              handleDropAction({ type: 'group_root', groupId: groupKey }, draggedEntryId);
               setDraggedEntryId(null);
               setDropTarget(null);
             }
@@ -1050,10 +1293,10 @@ export const SystemSettingsAppView: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-4">
-            {renderGroupSection('DOCK', 'DOCK', dockEntries)}
-            {renderGroupSection('DESKTOP', 'DESKTOP', desktopEntries)}
-            {renderGroupSection('PROJECTS', 'PROJECTS', projectsEntries, true)}
-            {renderGroupSection('SYSTEM', 'SYSTEM', systemEntries)}
+            {renderGroupSection('DOCK', 'DOCK', getOrderedDockEntries())}
+            {renderGroupSection('DESKTOP', 'DESKTOP', getOrderedDesktopEntries())}
+            {renderGroupSection('PROJECTS', 'PROJECTS', getOrderedProjectsEntries(), true)}
+            {renderGroupSection('SYSTEM', 'SYSTEM', getOrderedSystemEntries())}
           </div>
         </div>
 

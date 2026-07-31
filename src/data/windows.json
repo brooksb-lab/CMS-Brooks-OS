@@ -14,6 +14,15 @@
     "flora_ai",
     "contact_folder"
   ],
+  "desktopOrder": [
+    "3d_design",
+    "scatter",
+    "concept_design",
+    "on_no",
+    "macintosh_hd",
+    "film",
+    "apparel"
+  ],
   "windows": [
     {
       "id": "3d_design",
