@@ -12,6 +12,39 @@ export interface Block {
   [key: string]: any;
 }
 
+export interface WallpaperFrame {
+  id: string;
+  label: string;
+  elevation: number;
+  phase: string;
+  url: string;
+}
+
+export interface SiteSettings {
+  wallpaper: string;
+  menuBarTitle: string;
+  wallpaperMode?: 'static' | 'dynamic' | string;
+  wallpaperOverride?: string;
+  wallpaperTestMode?: boolean;
+  wallpaperTestInterval?: number;
+  wallpaperFrames?: WallpaperFrame[];
+}
+
+export const DEFAULT_WALLPAPER_FRAMES: WallpaperFrame[] = [
+  { id: 'night', label: 'Night', elevation: -90, phase: 'any', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'astronomical_dawn', label: 'Astronomical Dawn', elevation: -15, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'blue_hour_dawn', label: 'Blue Hour Dawn', elevation: -6, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'sunrise', label: 'Sunrise', elevation: 0, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'golden_morning', label: 'Golden Morning', elevation: 8, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'morning', label: 'Morning', elevation: 25, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'noon', label: 'Noon', elevation: 55, phase: 'any', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'afternoon', label: 'Afternoon', elevation: 25, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'golden_evening', label: 'Golden Evening', elevation: 8, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'sunset', label: 'Sunset', elevation: 0, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'blue_hour_dusk', label: 'Blue Hour Dusk', elevation: -6, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'astronomical_dusk', label: 'Astronomical Dusk', elevation: -15, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+];
+
 export interface WindowData {
   id: string;
   title: string;
@@ -270,15 +303,25 @@ export const SystemSettingsAppView: React.FC = () => {
   });
 
   // Site Settings State
-  const [site, setSite] = useState<{ wallpaper: string; menuBarTitle: string }>(() => {
-    const defaultSite = {
+  const [site, setSite] = useState<SiteSettings>(() => {
+    const defaultSite: SiteSettings = {
       wallpaper: "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
       menuBarTitle: "Brooks",
+      wallpaperMode: "static",
+      wallpaperOverride: "",
+      wallpaperTestMode: false,
+      wallpaperTestInterval: 1,
+      wallpaperFrames: DEFAULT_WALLPAPER_FRAMES,
     };
     const configSite = (windowsConfig as any).site || {};
     return {
       wallpaper: configSite.wallpaper !== undefined ? configSite.wallpaper : defaultSite.wallpaper,
       menuBarTitle: configSite.menuBarTitle !== undefined ? configSite.menuBarTitle : defaultSite.menuBarTitle,
+      wallpaperMode: configSite.wallpaperMode !== undefined ? configSite.wallpaperMode : defaultSite.wallpaperMode,
+      wallpaperOverride: configSite.wallpaperOverride !== undefined ? configSite.wallpaperOverride : defaultSite.wallpaperOverride,
+      wallpaperTestMode: configSite.wallpaperTestMode !== undefined ? configSite.wallpaperTestMode : defaultSite.wallpaperTestMode,
+      wallpaperTestInterval: configSite.wallpaperTestInterval !== undefined ? configSite.wallpaperTestInterval : defaultSite.wallpaperTestInterval,
+      wallpaperFrames: Array.isArray(configSite.wallpaperFrames) && configSite.wallpaperFrames.length > 0 ? configSite.wallpaperFrames : defaultSite.wallpaperFrames,
     };
   });
 
@@ -1494,6 +1537,13 @@ export const SystemSettingsAppView: React.FC = () => {
 
           {selectedId === 'site_appearance' ? (
             <div className="space-y-6">
+              {site.wallpaperTestMode && (
+                <div className="bg-red-600/90 text-white font-bold p-3.5 rounded-xl flex items-center justify-center gap-2 text-xs tracking-wider uppercase shadow-lg border border-red-500">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-white" />
+                  <span>WALLPAPER TEST MODE IS LIVE FOR ALL VISITORS</span>
+                </div>
+              )}
+
               <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -1536,6 +1586,146 @@ export const SystemSettingsAppView: React.FC = () => {
                   <p className="text-[11px] text-white/40 mt-1">
                     Default name shown in the top menu bar when Finder or active system window is focused.
                   </p>
+                </div>
+
+                {/* Wallpaper System Section */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60">
+                    Wallpaper
+                  </h4>
+
+                  {/* Mode Toggle */}
+                  <div className="space-y-1 text-xs">
+                    <label className="block text-white/60 mb-1">Mode</label>
+                    <div className="inline-flex rounded-lg bg-black/40 p-1 border border-white/15">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSite((prev) => ({ ...prev, wallpaperMode: 'static' }));
+                          setHasUnsavedChanges(true);
+                        }}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                          (site.wallpaperMode || 'static') === 'static'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-white/60 hover:text-white'
+                        }`}
+                      >
+                        Static
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSite((prev) => ({ ...prev, wallpaperMode: 'dynamic' }));
+                          setHasUnsavedChanges(true);
+                        }}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                          site.wallpaperMode === 'dynamic'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-white/60 hover:text-white'
+                        }`}
+                      >
+                        Dynamic
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Override Field */}
+                  <div className="space-y-1 text-xs pt-2">
+                    <label className="block text-white/60 mb-1">Override</label>
+                    <select
+                      value={site.wallpaperOverride || ''}
+                      onChange={(e) => {
+                        setSite((prev) => ({ ...prev, wallpaperOverride: e.target.value }));
+                        setHasUnsavedChanges(true);
+                      }}
+                      className="w-full max-w-xs px-3 py-2 bg-black/40 border border-white/15 rounded-md text-white text-xs focus:outline-none focus:border-blue-500 font-medium"
+                    >
+                      <option value="">Live</option>
+                      {(site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((frame) => (
+                        <option key={frame.id} value={frame.id}>
+                          {frame.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Test Mode Toggle & Interval */}
+                  <div className="space-y-3 pt-2">
+                    <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                      <input
+                        type="checkbox"
+                        checked={!!site.wallpaperTestMode}
+                        onChange={(e) => {
+                          setSite((prev) => ({ ...prev, wallpaperTestMode: e.target.checked }));
+                          setHasUnsavedChanges(true);
+                        }}
+                        className="w-4 h-4 rounded bg-black/40 border-white/20 text-red-600 focus:ring-0 cursor-pointer"
+                      />
+                      <span className="text-white/90 font-medium">Test mode</span>
+                    </label>
+
+                    <div className="space-y-1 text-xs pl-6">
+                      <label className="block text-white/60 mb-1">Seconds per frame</label>
+                      <input
+                        type="number"
+                        step="0.25"
+                        min="0.25"
+                        value={site.wallpaperTestInterval ?? 1}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          const intervalVal = isNaN(val) ? 1 : Math.max(0.25, val);
+                          setSite((prev) => ({ ...prev, wallpaperTestInterval: intervalVal }));
+                          setHasUnsavedChanges(true);
+                        }}
+                        className="w-32 px-3 py-1.5 bg-black/40 border border-white/15 rounded-md text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Frames Vertical List */}
+                  {site.wallpaperMode === 'dynamic' && (
+                    <div className="space-y-4 pt-4 border-t border-white/10">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-xs font-semibold uppercase tracking-wider text-white/70">
+                          Wallpaper Frames
+                        </h5>
+                        <span className="text-[10px] text-white/40 italic">Fixed set (12)</span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {(site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((frame) => (
+                          <div
+                            key={frame.id}
+                            className="p-3 bg-black/30 border border-white/10 rounded-lg space-y-2"
+                          >
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-white">{frame.label}</span>
+                              <span className="font-mono text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                                {frame.elevation}° solar elevation • phase: {frame.phase}
+                              </span>
+                            </div>
+
+                            <CloudinaryUploadField
+                              label="Frame Image URL / Upload"
+                              value={frame.url}
+                              onChange={(newUrl) => {
+                                setSite((prev) => ({
+                                  ...prev,
+                                  wallpaperFrames: (prev.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((f) =>
+                                    f.id === frame.id ? { ...f, url: newUrl } : f
+                                  ),
+                                }));
+                                setHasUnsavedChanges(true);
+                              }}
+                              placeholder="Paste frame image URL or drag file..."
+                              accept="image/*"
+                              resourceType="image"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

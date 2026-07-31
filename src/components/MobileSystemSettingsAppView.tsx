@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Eye, EyeOff, Trash2, Plus,
   Folder, GripVertical, FileText, UploadCloud, Check, Lock, Shield, Loader2,
-  MoveUpRight, RotateCcw, Palette, Layers, ArrowUp, ArrowDown, X, Sparkles
+  MoveUpRight, RotateCcw, Palette, Layers, ArrowUp, ArrowDown, X, Sparkles, AlertCircle
 } from 'lucide-react';
-import { WindowData, Block, CloudinaryUploadField } from './SystemSettingsAppView';
+import { WindowData, Block, CloudinaryUploadField, SiteSettings, WallpaperFrame, DEFAULT_WALLPAPER_FRAMES } from './SystemSettingsAppView';
 
 interface MobileSystemSettingsAppViewProps {
   windowsList: WindowData[];
@@ -13,8 +13,8 @@ interface MobileSystemSettingsAppViewProps {
   setDockOrder: React.Dispatch<React.SetStateAction<string[]>>;
   desktopOrder: string[];
   setDesktopOrder: React.Dispatch<React.SetStateAction<string[]>>;
-  site: { wallpaper: string; menuBarTitle: string };
-  setSite: React.Dispatch<React.SetStateAction<{ wallpaper: string; menuBarTitle: string }>>;
+  site: SiteSettings;
+  setSite: React.Dispatch<React.SetStateAction<SiteSettings>>;
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
   collapsedGroups: Record<string, boolean>;
@@ -798,6 +798,13 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
           <div className="space-y-5 pb-12">
             {selectedId === 'site_appearance' ? (
               <div className="space-y-5">
+                {site.wallpaperTestMode && (
+                  <div className="bg-red-600/90 text-white font-bold p-3.5 rounded-2xl flex items-center justify-center gap-2 text-xs tracking-wider uppercase shadow-lg border border-red-500">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-white" />
+                    <span>WALLPAPER TEST MODE IS LIVE FOR ALL VISITORS</span>
+                  </div>
+                )}
+
                 <div className="bg-[#18181c] border border-white/10 rounded-2xl p-4 space-y-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2">
                     <Palette className="w-4 h-4" />
@@ -830,6 +837,146 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
                       placeholder="Brooks"
                       className="w-full px-3.5 py-2.5 bg-black/40 border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:border-blue-500 font-medium"
                     />
+                  </div>
+
+                  {/* Wallpaper System Section */}
+                  <div className="space-y-4 pt-4 border-t border-white/10">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-white/60">
+                      Wallpaper
+                    </h4>
+
+                    {/* Mode Toggle */}
+                    <div className="space-y-1.5 text-xs">
+                      <label className="block text-white/70 font-semibold">Mode</label>
+                      <div className="inline-flex rounded-xl bg-black/40 p-1 border border-white/15">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSite((prev) => ({ ...prev, wallpaperMode: 'static' }));
+                            setHasUnsavedChanges(true);
+                          }}
+                          className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                            (site.wallpaperMode || 'static') === 'static'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-white/60 hover:text-white'
+                          }`}
+                        >
+                          Static
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSite((prev) => ({ ...prev, wallpaperMode: 'dynamic' }));
+                            setHasUnsavedChanges(true);
+                          }}
+                          className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+                            site.wallpaperMode === 'dynamic'
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-white/60 hover:text-white'
+                          }`}
+                        >
+                          Dynamic
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Override Field */}
+                    <div className="space-y-1.5 text-xs pt-2">
+                      <label className="block text-white/70 font-semibold">Override</label>
+                      <select
+                        value={site.wallpaperOverride || ''}
+                        onChange={(e) => {
+                          setSite((prev) => ({ ...prev, wallpaperOverride: e.target.value }));
+                          setHasUnsavedChanges(true);
+                        }}
+                        className="w-full px-3.5 py-2.5 bg-black/40 border border-white/15 rounded-xl text-white text-xs focus:outline-none focus:border-blue-500 font-medium"
+                      >
+                        <option value="">Live</option>
+                        {(site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((frame) => (
+                          <option key={frame.id} value={frame.id}>
+                            {frame.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Test Mode Toggle & Interval */}
+                    <div className="space-y-3 pt-2">
+                      <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                        <input
+                          type="checkbox"
+                          checked={!!site.wallpaperTestMode}
+                          onChange={(e) => {
+                            setSite((prev) => ({ ...prev, wallpaperTestMode: e.target.checked }));
+                            setHasUnsavedChanges(true);
+                          }}
+                          className="w-4 h-4 rounded bg-black/40 border-white/20 text-red-600 focus:ring-0 cursor-pointer"
+                        />
+                        <span className="text-white/90 font-medium">Test mode</span>
+                      </label>
+
+                      <div className="space-y-1 text-xs pl-6">
+                        <label className="block text-white/70 font-semibold mb-1">Seconds per frame</label>
+                        <input
+                          type="number"
+                          step="0.25"
+                          min="0.25"
+                          value={site.wallpaperTestInterval ?? 1}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            const intervalVal = isNaN(val) ? 1 : Math.max(0.25, val);
+                            setSite((prev) => ({ ...prev, wallpaperTestInterval: intervalVal }));
+                            setHasUnsavedChanges(true);
+                          }}
+                          className="w-32 px-3 py-2 bg-black/40 border border-white/15 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dynamic Frames Vertical List */}
+                    {site.wallpaperMode === 'dynamic' && (
+                      <div className="space-y-4 pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-xs font-semibold uppercase tracking-wider text-white/70">
+                            Wallpaper Frames
+                          </h5>
+                          <span className="text-[10px] text-white/40 italic">Fixed set (12)</span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {(site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((frame) => (
+                            <div
+                              key={frame.id}
+                              className="p-3 bg-black/30 border border-white/10 rounded-xl space-y-2"
+                            >
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-semibold text-white">{frame.label}</span>
+                                <span className="font-mono text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                                  {frame.elevation}° • phase: {frame.phase}
+                                </span>
+                              </div>
+
+                              <CloudinaryUploadField
+                                label="Frame Image URL / Upload"
+                                value={frame.url}
+                                onChange={(newUrl) => {
+                                  setSite((prev) => ({
+                                    ...prev,
+                                    wallpaperFrames: (prev.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((f) =>
+                                      f.id === frame.id ? { ...f, url: newUrl } : f
+                                    ),
+                                  }));
+                                  setHasUnsavedChanges(true);
+                                }}
+                                placeholder="Paste frame image URL or drag file..."
+                                accept="image/*"
+                                resourceType="image"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

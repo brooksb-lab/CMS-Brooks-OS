@@ -1,7 +1,97 @@
 {
   "site": {
-    "wallpaper": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png",
-    "menuBarTitle": "Brooks"
+    "wallpaper": "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
+    "menuBarTitle": "Brooks",
+    "wallpaperMode": "static",
+    "wallpaperOverride": "",
+    "wallpaperTestMode": false,
+    "wallpaperTestInterval": 1,
+    "wallpaperFrames": [
+      {
+        "id": "night",
+        "label": "Night",
+        "elevation": -90,
+        "phase": "any",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "astronomical_dawn",
+        "label": "Astronomical Dawn",
+        "elevation": -15,
+        "phase": "rising",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "blue_hour_dawn",
+        "label": "Blue Hour Dawn",
+        "elevation": -6,
+        "phase": "rising",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "sunrise",
+        "label": "Sunrise",
+        "elevation": 0,
+        "phase": "rising",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "golden_morning",
+        "label": "Golden Morning",
+        "elevation": 8,
+        "phase": "rising",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "morning",
+        "label": "Morning",
+        "elevation": 25,
+        "phase": "rising",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "noon",
+        "label": "Noon",
+        "elevation": 55,
+        "phase": "any",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "afternoon",
+        "label": "Afternoon",
+        "elevation": 25,
+        "phase": "falling",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "golden_evening",
+        "label": "Golden Evening",
+        "elevation": 8,
+        "phase": "falling",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "sunset",
+        "label": "Sunset",
+        "elevation": 0,
+        "phase": "falling",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "blue_hour_dusk",
+        "label": "Blue Hour Dusk",
+        "elevation": -6,
+        "phase": "falling",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      },
+      {
+        "id": "astronomical_dusk",
+        "label": "Astronomical Dusk",
+        "elevation": -15,
+        "phase": "falling",
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+      }
+    ]
   },
   "dockOrder": [
     "clo",
@@ -594,7 +684,7 @@
       "folder": null,
       "width": 1000,
       "height": 700,
-      "isFullScreen": true,
+      "isFullScreen": false,
       "variant": null,
       "order": 20,
       "visible": true,
@@ -604,8 +694,8 @@
       },
       "dockBreakpoints": [
         "desktop",
-        "mobile",
-        "tablet"
+        "tablet",
+        "mobile"
       ]
     },
     {
