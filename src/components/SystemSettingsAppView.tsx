@@ -18,7 +18,6 @@ interface WindowData {
   folder: string | null;
   width: number | null;
   height: number | null;
-  showOnDesktop: boolean;
   showInDock: boolean;
   trashed?: boolean;
   isFullScreen: boolean;
@@ -443,10 +442,9 @@ export const SystemSettingsAppView: React.FC = () => {
         type === 'folder'
           ? 'https://res.cloudinary.com/dezas8twg/image/upload/v1777921908/BrooksOS_0003_Folder_tptbpo.png'
           : 'https://res.cloudinary.com/dezas8twg/image/upload/v1777921910/BrooksOS_0006_Project_mjqqc4.png',
-      folder: null,
+      folder: 'desktop',
       width: type === 'folder' ? 500 : 800,
       height: type === 'folder' ? 350 : 600,
-      showOnDesktop: true,
       showInDock: false,
       isFullScreen: false,
       variant: type === 'folder' ? 'folder' : null,
@@ -688,7 +686,7 @@ export const SystemSettingsAppView: React.FC = () => {
   };
 
   const getOrderedDesktopEntries = (): WindowData[] => {
-    const desktopWindows = visibleWindowsList.filter((w) => w.showOnDesktop === true && !w.trashed);
+    const desktopWindows = visibleWindowsList.filter((w) => w.folder === 'desktop' && !w.trashed);
     const map = new Map<string, WindowData>(desktopWindows.map((w) => [w.id, w]));
 
     const result: WindowData[] = [];
@@ -712,7 +710,7 @@ export const SystemSettingsAppView: React.FC = () => {
 
   const getOrderedSystemEntries = (): WindowData[] => {
     return visibleWindowsList.filter(
-      (w) => !(w.showInDock || w.showOnDesktop || w.content?.type === 'blocks') && !w.trashed
+      (w) => !(w.showInDock || w.folder === 'desktop' || w.content?.type === 'blocks') && !w.trashed
     );
   };
 
@@ -1570,16 +1568,6 @@ export const SystemSettingsAppView: React.FC = () => {
 
                 {/* Checkbox Display Flags */}
                 <div className="flex flex-wrap items-center gap-6 pt-2 text-xs border-t border-white/10 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedEntry.showOnDesktop}
-                      onChange={(e) => updateSelectedField('showOnDesktop', e.target.checked)}
-                      className="rounded bg-black/40 border-white/20 text-blue-600 focus:ring-0 cursor-pointer"
-                    />
-                    <span className="text-white/80">Show on Desktop</span>
-                  </label>
-
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"

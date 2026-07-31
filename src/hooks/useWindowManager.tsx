@@ -14,7 +14,7 @@ export type WindowState = {
   height?: number | string;
   initialX?: string | number;
   initialY?: string | number;
-  showOnDesktop?: boolean;
+  folder?: string | null;
   showInDock?: boolean;
   trashed?: boolean;
   variant?: 'default' | 'folder';

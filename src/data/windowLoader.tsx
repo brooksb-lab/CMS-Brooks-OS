@@ -29,7 +29,6 @@ export interface WindowDataEntry {
   folder: string | null;
   width: number | null;
   height: number | null;
-  showOnDesktop?: boolean;
   showInDock?: boolean;
   trashed?: boolean;
   isFullScreen?: boolean;

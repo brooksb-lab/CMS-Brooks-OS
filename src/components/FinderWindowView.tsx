@@ -134,9 +134,21 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
   const displayItems = useMemo<FolderItem[]>(() => {
     if (currentLoc.type === 'sidebar') {
       switch (currentLoc.path) {
-        case 'Desktop':
+        case 'Desktop': {
+          const ids = windows['desktop']?.folderContents || [];
+          if (ids.length > 0) {
+            return ids
+              .filter((id: string) => windows[id] && !windows[id]?.trashed)
+              .map((id: string) => ({
+                id,
+                title: windows[id]?.title || id,
+                icon: windows[id]?.icon,
+                variant: windows[id]?.variant,
+                folderContents: windows[id]?.folderContents,
+              }));
+          }
           return Object.values(windows)
-            .filter((app: any) => app.showOnDesktop !== false && !app.trashed)
+            .filter((app: any) => app.folder === 'desktop' && !app.trashed)
             .map((app: any) => ({
               id: app.id,
               title: app.title,
@@ -144,6 +156,7 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
               variant: app.variant,
               folderContents: app.folderContents,
             }));
+        }
 
         case 'Applications':
           return DOCK_ORDER
@@ -216,7 +229,7 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
       const app = windows[currentLoc.id];
       if (app && app.folderContents && app.folderContents.length > 0) {
         return app.folderContents
-          .filter((id: string) => !windows[id]?.trashed)
+          .filter((id: string) => windows[id] && !windows[id]?.trashed)
           .map((id: string) => ({
             id,
             title: windows[id]?.title || id,
@@ -225,7 +238,15 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
             folderContents: windows[id]?.folderContents,
           }));
       }
-      return [];
+      return Object.values(windows)
+        .filter((app: any) => app.folder === currentLoc.id && !app.trashed)
+        .map((app: any) => ({
+          id: app.id,
+          title: app.title,
+          icon: app.icon,
+          variant: app.variant,
+          folderContents: app.folderContents,
+        }));
     }
   }, [currentLoc, windows]);
 

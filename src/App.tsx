@@ -366,9 +366,9 @@ const DesktopApp = () => {
         resolved[item.id] = { x, y, z: 10 };
       });
 
-      // Find unplaced registry entries with showOnDesktop true
+      // Find unplaced registry entries with folder 'desktop'
       const unplacedEntries = windowsRegistryData
-        .filter(entry => entry.showOnDesktop && !entry.trashed && !resolved[entry.id])
+        .filter(entry => entry.folder === 'desktop' && !entry.trashed && !resolved[entry.id])
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
       const resolvePadding = 16;
@@ -549,9 +549,9 @@ const DesktopApp = () => {
         id: entry.id,
         title: entry.title,
         icon: entry.icon,
+        folder: entry.folder,
         initialX: initX,
         initialY: initY,
-        showOnDesktop: entry.showOnDesktop,
         showInDock: entry.showInDock,
         trashed: entry.trashed,
         isFullScreen: entry.isFullScreen,
@@ -569,7 +569,7 @@ const DesktopApp = () => {
   }, [registerWindow]);
 
   const appList = Object.values(windows) as WindowState[];
-  const desktopApps = appList.filter(app => app.showOnDesktop !== false && !app.trashed);
+  const desktopApps = appList.filter(app => app.folder === 'desktop' && !app.trashed);
   
   const currentDockOrder = isMobile ? MOBILE_DOCK_ORDER : DESKTOP_DOCK_ORDER;
   const dockApps = currentDockOrder.map(id => windows[id]).filter(app => app && app.showInDock && !app.trashed);
