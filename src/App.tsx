@@ -13,6 +13,8 @@ import { cn } from '@/src/lib/utils';
 import windowsConfig from '@/src/data/windows.json';
 import { windowsRegistryData, resolveWindowComponent } from '@/src/data/windowLoader';
 import { DOCK_ORDER } from '@/src/data/dockOrder';
+import { getDerivedLocation, calculateSolarPosition, selectWallpaperFrames } from '@/src/lib/solar';
+import { DEFAULT_WALLPAPER_FRAMES, type SiteSettings } from '@/src/components/SystemSettingsAppView';
 
 const siteConfig = (windowsConfig as any).site || {};
 const wallpaper = siteConfig.wallpaper || "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg";
@@ -168,6 +170,148 @@ const DesktopApp = () => {
   const [selection, setSelection] = useState<{ start: { x: number; y: number }; end: { x: number; y: number } } | null>(null);
   const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());
   const hasOpenedStickies = React.useRef(false);
+
+  // Dynamic Wallpaper State & Solar Position Engine
+  const [siteState, setSiteState] = useState<SiteSettings>(() => {
+    const rawSite = (windowsConfig as any).site || {};
+    return {
+      wallpaper: rawSite.wallpaper || "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
+      menuBarTitle: rawSite.menuBarTitle || "Brooks",
+      wallpaperMode: rawSite.wallpaperMode || "static",
+      wallpaperOverride: rawSite.wallpaperOverride || "",
+      wallpaperTestMode: !!rawSite.wallpaperTestMode,
+      wallpaperTestInterval: rawSite.wallpaperTestInterval ?? 1,
+      wallpaperFrames: Array.isArray(rawSite.wallpaperFrames) && rawSite.wallpaperFrames.length > 0
+        ? rawSite.wallpaperFrames
+        : DEFAULT_WALLPAPER_FRAMES,
+    };
+  });
+
+  useEffect(() => {
+    const handleSiteUpdate = (e: any) => {
+      if (e.detail) {
+        setSiteState(e.detail);
+      } else {
+        const rawSite = (windowsConfig as any).site || {};
+        setSiteState({
+          wallpaper: rawSite.wallpaper || "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
+          menuBarTitle: rawSite.menuBarTitle || "Brooks",
+          wallpaperMode: rawSite.wallpaperMode || "static",
+          wallpaperOverride: rawSite.wallpaperOverride || "",
+          wallpaperTestMode: !!rawSite.wallpaperTestMode,
+          wallpaperTestInterval: rawSite.wallpaperTestInterval ?? 1,
+          wallpaperFrames: Array.isArray(rawSite.wallpaperFrames) && rawSite.wallpaperFrames.length > 0
+            ? rawSite.wallpaperFrames
+            : DEFAULT_WALLPAPER_FRAMES,
+        });
+      }
+    };
+    window.addEventListener('site-config-updated', handleSiteUpdate);
+    return () => window.removeEventListener('site-config-updated', handleSiteUpdate);
+  }, []);
+
+  const [testFrameIndex, setTestFrameIndex] = useState(0);
+  const [nowDate, setNowDate] = useState(() => new Date());
+  const [isTransitionDisabled, setIsTransitionDisabled] = useState(false);
+  const preloadedUrlsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setIsTransitionDisabled(true);
+        setNowDate(new Date());
+        const timer = setTimeout(() => {
+          setIsTransitionDisabled(false);
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  const wallpaperMode = siteState.wallpaperMode || 'static';
+  const isWallpaperDynamic = wallpaperMode === 'dynamic';
+  const isTestMode = isWallpaperDynamic && !!siteState.wallpaperTestMode;
+  const overrideFrameId = isWallpaperDynamic && !isTestMode ? (siteState.wallpaperOverride || '') : '';
+  const framesList = siteState.wallpaperFrames && siteState.wallpaperFrames.length > 0
+    ? siteState.wallpaperFrames
+    : DEFAULT_WALLPAPER_FRAMES;
+  const testIntervalSec = Math.max(0.25, siteState.wallpaperTestInterval ?? 1);
+
+  useEffect(() => {
+    if (isTestMode) {
+      framesList.forEach((f) => {
+        if (f.url && !preloadedUrlsRef.current.has(f.url)) {
+          preloadedUrlsRef.current.add(f.url);
+          const img = new Image();
+          img.src = f.url;
+        }
+      });
+
+      const intervalMs = testIntervalSec * 1000;
+      const timer = setInterval(() => {
+        setTestFrameIndex((prev) => (prev + 1) % (framesList.length || 1));
+      }, intervalMs);
+
+      return () => clearInterval(timer);
+    }
+  }, [isTestMode, testIntervalSec, framesList]);
+
+  useEffect(() => {
+    if (isWallpaperDynamic && !isTestMode && !overrideFrameId) {
+      const timer = setInterval(() => {
+        setNowDate(new Date());
+      }, 60000);
+      return () => clearInterval(timer);
+    }
+  }, [isWallpaperDynamic, isTestMode, overrideFrameId]);
+
+  let lowerImgSrc = siteState.wallpaper;
+  let upperImgSrc = siteState.wallpaper;
+  let upperOpacity = 0;
+  let transitionStyle = 'none';
+
+  if (!isWallpaperDynamic) {
+    lowerImgSrc = siteState.wallpaper;
+    upperImgSrc = siteState.wallpaper;
+    upperOpacity = 0;
+    transitionStyle = 'none';
+  } else if (isTestMode) {
+    const currFrame = framesList[testFrameIndex % framesList.length] || framesList[0];
+    lowerImgSrc = currFrame ? currFrame.url : siteState.wallpaper;
+    upperImgSrc = currFrame ? currFrame.url : siteState.wallpaper;
+    upperOpacity = 0;
+    transitionStyle = 'none';
+  } else if (overrideFrameId) {
+    const overFrame = framesList.find((f) => f.id === overrideFrameId);
+    const frameUrl = overFrame ? overFrame.url : siteState.wallpaper;
+    lowerImgSrc = frameUrl;
+    upperImgSrc = frameUrl;
+    upperOpacity = 0;
+    transitionStyle = 'none';
+  } else {
+    const loc = getDerivedLocation();
+    const solarPos = calculateSolarPosition(nowDate, loc.latitude, loc.longitude);
+    const selection = selectWallpaperFrames(framesList, solarPos.elevation, solarPos.phase);
+
+    lowerImgSrc = selection.lowerFrame.url;
+    upperImgSrc = selection.upperFrame.url;
+    upperOpacity = selection.blend;
+    transitionStyle = isTransitionDisabled ? 'none' : 'opacity 2s linear';
+
+    const urlsToPreload = [selection.lowerFrame.url, selection.upperFrame.url];
+    if (selection.nextFrameInTravel?.url) {
+      urlsToPreload.push(selection.nextFrameInTravel.url);
+    }
+    urlsToPreload.forEach((url) => {
+      if (url && !preloadedUrlsRef.current.has(url)) {
+        preloadedUrlsRef.current.add(url);
+        const img = new Image();
+        img.src = url;
+      }
+    });
+  }
 
   const openMobileApp = isMobile ? (Object.values(windows) as WindowState[]).find(w => w.isOpen && w.id !== 'stickies' && !w.isMinimized) : null;
   const isMobileAppOpen = isMobile && !!openMobileApp;
@@ -783,12 +927,24 @@ const DesktopApp = () => {
 
       {/* Background */}
       {!isMobileAppOpen && (
-        <img
-          src={wallpaper}
-          alt="Desktop Background"
-          draggable={false}
-          className="absolute inset-0 z-0 w-full h-full object-cover scale-110 pointer-events-none"
-        />
+        <>
+          <img
+            src={lowerImgSrc}
+            alt="Desktop Background"
+            draggable={false}
+            className="absolute inset-0 z-0 w-full h-full object-cover scale-110 pointer-events-none"
+          />
+          <img
+            src={upperImgSrc}
+            alt="Desktop Background"
+            draggable={false}
+            className="absolute inset-0 z-0 w-full h-full object-cover scale-110 pointer-events-none"
+            style={{
+              opacity: upperOpacity,
+              transition: transitionStyle,
+            }}
+          />
+        </>
       )}
       
       {/* Desktop Window Constraints Layer */}

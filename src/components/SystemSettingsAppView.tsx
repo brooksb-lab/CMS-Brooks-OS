@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import windowsConfig from '../data/windows.json';
 import { MobileSystemSettingsAppView } from './MobileSystemSettingsAppView';
 import {
+  getDerivedLocation,
+  calculateSolarPosition,
+  selectWallpaperFrames,
+} from '../lib/solar';
+import {
   Lock, Eye, EyeOff, Trash2, Plus, ChevronDown,
   Folder, Layers, Shield, GripVertical, FileText, UploadCloud,
   Check, AlertCircle, Loader2, RefreshCw, MoveUpRight, RotateCcw, Palette
@@ -380,6 +385,17 @@ export const SystemSettingsAppView: React.FC = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    (windowsConfig as any).site = site;
+    window.dispatchEvent(new CustomEvent('site-config-updated', { detail: site }));
+  }, [site]);
+
+  const [readoutNow, setReadoutNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setReadoutNow(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -1726,6 +1742,69 @@ export const SystemSettingsAppView: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Read-only Monospace Readout */}
+                  {(() => {
+                    const loc = getDerivedLocation();
+                    const solarPos = calculateSolarPosition(readoutNow, loc.latitude, loc.longitude);
+                    const sel = selectWallpaperFrames(
+                      site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES,
+                      solarPos.elevation,
+                      solarPos.phase
+                    );
+
+                    let tier: 'static' | 'test' | 'override' | 'live' = 'static';
+                    if ((site.wallpaperMode || 'static') === 'dynamic') {
+                      if (site.wallpaperTestMode) {
+                        tier = 'test';
+                      } else if (site.wallpaperOverride && site.wallpaperOverride !== '') {
+                        tier = 'override';
+                      } else {
+                        tier = 'live';
+                      }
+                    }
+
+                    let lowerL = '';
+                    let upperL = '';
+                    let blendV = '0.00';
+
+                    if (tier === 'static') {
+                      lowerL = 'Static Wallpaper';
+                      upperL = 'Static Wallpaper';
+                      blendV = '0.00';
+                    } else if (tier === 'test') {
+                      lowerL = 'Test Mode Cycling';
+                      upperL = 'Test Mode Cycling';
+                      blendV = '0.00';
+                    } else if (tier === 'override') {
+                      const overFrame = (site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).find((f) => f.id === site.wallpaperOverride);
+                      lowerL = overFrame ? overFrame.label : site.wallpaperOverride || 'Override';
+                      upperL = lowerL;
+                      blendV = '0.00';
+                    } else {
+                      lowerL = sel.lowerFrame.label;
+                      upperL = sel.upperFrame.label;
+                      blendV = sel.blend.toFixed(2);
+                    }
+
+                    return (
+                      <div className="mt-6 p-4 bg-black/60 border border-white/15 rounded-xl font-mono text-xs text-green-400 space-y-2 shadow-inner">
+                        <div className="text-[10px] uppercase font-bold tracking-wider text-white/50 border-b border-white/10 pb-1.5 flex items-center justify-between">
+                          <span>Solar Positioning & Frame Readout</span>
+                          <span className="text-yellow-400 font-bold">{tier.toUpperCase()} TIER</span>
+                        </div>
+                        <div className="space-y-1 text-[11px] leading-relaxed">
+                          <div><span className="text-white/40">Active Precedence Tier:</span> <span className="text-yellow-300 font-semibold">{tier}</span></div>
+                          <div><span className="text-white/40">Detected Timezone:</span> <span className="text-white">{loc.timezone}</span></div>
+                          <div><span className="text-white/40">Derived Lat / Lon:</span> <span className="text-white">{loc.latitude.toFixed(1)}°, {loc.longitude.toFixed(1)}°</span></div>
+                          <div><span className="text-white/40">Solar Elevation:</span> <span className="text-white font-bold">{solarPos.elevation.toFixed(1)}°</span></div>
+                          <div><span className="text-white/40">Current Phase:</span> <span className="text-white capitalize">{solarPos.phase}</span></div>
+                          <div><span className="text-white/40">Active Frame Labels:</span> <span className="text-white font-medium">{lowerL} / {upperL}</span></div>
+                          <div><span className="text-white/40">Blend Value:</span> <span className="text-white font-bold">{blendV}</span></div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
