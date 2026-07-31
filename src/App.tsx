@@ -169,6 +169,38 @@ const DesktopApp = () => {
   const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());
   const hasOpenedStickies = React.useRef(false);
 
+  const openMobileApp = isMobile ? (Object.values(windows) as WindowState[]).find(w => w.isOpen && w.id !== 'stickies' && !w.isMinimized) : null;
+  const isMobileAppOpen = isMobile && !!openMobileApp;
+
+  const handleOpenApp = React.useCallback((id: string, rect?: { top: number; left: number; width: number; height: number }) => {
+    if (isMobile && id !== 'stickies') {
+      (Object.values(windows) as WindowState[]).forEach(w => {
+        if (w.isOpen && w.id !== id && w.id !== 'stickies') {
+          closeWindow(w.id);
+        }
+      });
+    }
+    openWindow(id, rect);
+  }, [isMobile, windows, closeWindow, openWindow]);
+
+  const handleToggleApp = React.useCallback((id: string, rect?: { top: number; left: number; width: number; height: number }) => {
+    if (isMobile && id !== 'stickies') {
+      const win = windows[id];
+      if (win && win.isOpen) {
+        focusWindow(id);
+        return;
+      }
+      (Object.values(windows) as WindowState[]).forEach(w => {
+        if (w.isOpen && w.id !== id && w.id !== 'stickies') {
+          closeWindow(w.id);
+        }
+      });
+      openWindow(id, rect);
+    } else {
+      toggleWindow(id, rect);
+    }
+  }, [isMobile, windows, closeWindow, openWindow, focusWindow, toggleWindow]);
+
   const [mobilePage, setMobilePage] = useState(0);
   const dragX = useMotionValue(0);
 
@@ -740,12 +772,14 @@ const DesktopApp = () => {
       )}
 
       {/* Background */}
-      <img
-        src={wallpaper}
-        alt="Desktop Background"
-        draggable={false}
-        className="absolute inset-0 z-0 w-full h-full object-cover scale-110 pointer-events-none"
-      />
+      {!isMobileAppOpen && (
+        <img
+          src={wallpaper}
+          alt="Desktop Background"
+          draggable={false}
+          className="absolute inset-0 z-0 w-full h-full object-cover scale-110 pointer-events-none"
+        />
+      )}
       
       {/* Desktop Window Constraints Layer */}
       <div 
@@ -778,12 +812,13 @@ const DesktopApp = () => {
       {isTouchUI ? (
         <div 
           className={cn(
-            "absolute top-0 inset-x-0 z-[10000] flex items-center justify-between text-white font-semibold text-sm mix-blend-difference select-none",
-            isTablet ? "h-12 px-8 pt-5" : "px-6"
+            "absolute top-0 inset-x-0 z-[10000] flex items-center justify-between text-white font-semibold text-sm select-none transition-colors duration-200",
+            isTablet ? "h-12 px-8 pt-5 mix-blend-difference" : "px-6"
           )}
           style={!isTablet ? {
             paddingTop: 'env(safe-area-inset-top, 0px)',
             height: 'calc(40px + env(safe-area-inset-top, 0px))',
+            backgroundColor: isMobileAppOpen ? '#282828' : 'transparent',
           } : undefined}
         >
           <div className="flex items-center h-10">
@@ -806,7 +841,7 @@ const DesktopApp = () => {
             : defaultMenuBarTitle
           } 
           isFullScreen={isAnyWindowMaximized}
-          onOpenWindow={openWindow}
+          onOpenWindow={handleOpenApp}
         />
       )}
 
@@ -864,7 +899,7 @@ const DesktopApp = () => {
                 onDragStart={handleIconDragStart}
                 onDragMove={handleIconDragMove}
                 onDragEnd={handleIconDragEnd}
-                onClick={(id, rect) => toggleWindow(id, rect)}
+                onClick={(id, rect) => handleToggleApp(id, rect)}
               />
             ))}
           </div>
@@ -904,7 +939,7 @@ const DesktopApp = () => {
                       appId={app.id}
                       appIds={app.folderContents} 
                       windows={windows} 
-                      toggleWindow={toggleWindow} 
+                      toggleWindow={handleToggleApp} 
                       isTouchUI={isTouchUI}
                       isMobile={isTouchUI}
                       closeFolder={() => closeWindow(app.id)}
@@ -955,7 +990,7 @@ const DesktopApp = () => {
                       appId={app.id}
                       appIds={app.folderContents} 
                       windows={windows} 
-                      toggleWindow={toggleWindow} 
+                      toggleWindow={handleToggleApp} 
                       isTouchUI={isTouchUI}
                       isMobile={isTouchUI}
                       closeFolder={() => closeWindow(app.id)}
@@ -971,7 +1006,7 @@ const DesktopApp = () => {
       </motion.div>
 
       {/* Page Dots Indicator */}
-      {isMobile && (
+      {isMobile && !isMobileAppOpen && (
         <div 
           className="absolute left-1/2 -translate-x-1/2 flex gap-1.5 z-[60] pointer-events-auto"
           style={{ bottom: 'calc(108px + env(safe-area-inset-bottom, 0px))' }}
@@ -1045,7 +1080,7 @@ const DesktopApp = () => {
             onUpdateMinimizeRect={setMinimizeRect}
           />
         </div>
-      ) : (
+      ) : !isMobileAppOpen ? (
         <div 
           className={cn(
             "absolute z-50 flex items-center shadow-[0_10px_40px_rgba(0,0,0,0.5)]",
@@ -1067,7 +1102,7 @@ const DesktopApp = () => {
               )}
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
-                toggleWindow(app.id, {
+                handleToggleApp(app.id, {
                   top: rect.top,
                   left: rect.left,
                   width: rect.width,
@@ -1096,7 +1131,7 @@ const DesktopApp = () => {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Windows Layer (Desktop/Tablet Only - Stationary) */}
       <div className="absolute inset-0 pointer-events-none">

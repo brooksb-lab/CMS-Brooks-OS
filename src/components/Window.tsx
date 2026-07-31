@@ -165,6 +165,9 @@ export const Window: React.FC<WindowProps> = ({
   );
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const swipeY = useMotionValue(0);
+  const swipeScale = useMotionValue(1);
+  const swipeRadius = useMotionValue(0);
   const borderRadius = useMotionValue(
     launchRect ? 24 : isFullScreen || isMobile ? 0 : id === "stickies" ? 0 : 10,
   );
@@ -275,6 +278,9 @@ export const Window: React.FC<WindowProps> = ({
 
       x.set(0);
       y.set(0);
+      swipeY.set(0);
+      swipeScale.set(1);
+      swipeRadius.set(0);
       scale.set(1);
       setIsOpening(true);
       setShowIcon(true);
@@ -634,11 +640,11 @@ export const Window: React.FC<WindowProps> = ({
         top: isPhoneMobile && id !== "stickies" ? "calc(40px + env(safe-area-inset-top, 0px))" : top,
         left: isPhoneMobile && id !== "stickies" ? 0 : left,
         x,
-        y,
-        borderRadius: isPhoneMobile && id !== "stickies" ? 0 : borderRadius,
+        y: isPhoneMobile && id !== "stickies" ? swipeY : y,
+        borderRadius: isPhoneMobile && id !== "stickies" ? swipeRadius : borderRadius,
         opacity,
-        scale,
-        transformOrigin,
+        scale: isPhoneMobile && id !== "stickies" ? swipeScale : scale,
+        transformOrigin: isPhoneMobile && id !== "stickies" ? "center center" : transformOrigin,
         touchAction: "pan-x pan-y",
       }}
       className={cn(
@@ -982,6 +988,47 @@ export const Window: React.FC<WindowProps> = ({
             })
           )}
         </div>
+
+        {/* iOS Home Indicator & Swipe to Close Gesture (Phone Mobile only) */}
+        {isPhoneMobile && id !== "stickies" && (
+          <motion.div
+            className="absolute bottom-0 inset-x-0 z-[100] flex flex-col items-center justify-end pointer-events-auto touch-none select-none cursor-grab active:cursor-grabbing"
+            style={{
+              paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
+              height: "calc(32px + env(safe-area-inset-bottom, 0px))",
+            }}
+            onPan={(_, info) => {
+              const upwardDrag = -info.offset.y;
+              if (upwardDrag > 0) {
+                const scaleVal = Math.max(0.65, 1 - upwardDrag / 600);
+                const radiusVal = Math.min(32, upwardDrag / 4);
+                const translateYVal = -upwardDrag * 0.85;
+
+                swipeScale.set(scaleVal);
+                swipeY.set(translateYVal);
+                swipeRadius.set(radiusVal);
+              } else {
+                swipeScale.set(1);
+                swipeY.set(0);
+                swipeRadius.set(0);
+              }
+            }}
+            onPanEnd={(_, info) => {
+              const upwardDrag = -info.offset.y;
+              const upwardVelocity = -info.velocity.y;
+
+              if (upwardDrag > 80 || upwardVelocity > 300) {
+                onClose();
+              } else {
+                animate(swipeY, 0, { type: "spring", stiffness: 400, damping: 30 });
+                animate(swipeScale, 1, { type: "spring", stiffness: 400, damping: 30 });
+                animate(swipeRadius, 0, { type: "spring", stiffness: 400, damping: 30 });
+              }
+            }}
+          >
+            <div className="w-36 h-1 bg-white/70 rounded-full shadow-sm" />
+          </motion.div>
+        )}
       </motion.div>
 
       {!isMaximized && !isMobile && (
