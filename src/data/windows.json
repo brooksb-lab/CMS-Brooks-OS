@@ -122,13 +122,6 @@
                 "value": "Archive > Concepts"
               }
             ]
-          },
-          {
-            "type": "image",
-            "src": "https://res.cloudinary.com/dezas8twg/image/upload/v1785471582/jappjkgwhgdzr2mrvvuu.png",
-            "alt": "",
-            "caption": "",
-            "width": "full"
           }
         ]
       }
@@ -705,24 +698,6 @@
       "content": {
         "type": "component",
         "name": "SystemSettingsAppView"
-      }
-    },
-    {
-      "id": "window_64679",
-      "title": "New Window",
-      "icon": "https://res.cloudinary.com/dezas8twg/image/upload/v1785473393/lh74wd6hae2geua6nxph.png",
-      "folder": null,
-      "width": 800,
-      "height": 600,
-      "showOnDesktop": true,
-      "showInDock": false,
-      "isFullScreen": false,
-      "variant": null,
-      "order": 27,
-      "visible": true,
-      "content": {
-        "type": "blocks",
-        "blocks": []
       }
     }
   ]

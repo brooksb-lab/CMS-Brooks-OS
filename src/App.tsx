@@ -361,15 +361,55 @@ const DesktopApp = () => {
         resolved[item.id] = { x, y, z: 10 };
       });
 
-      // Simple collision resolution to prevent exact stacking
+      // Find unplaced registry entries with showOnDesktop true
+      const unplacedEntries = windowsRegistryData
+        .filter(entry => entry.showOnDesktop && !resolved[entry.id])
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
       const resolvePadding = 16;
+      const stepX = ICON_SIZE + PADDING;
+      const stepY = ICON_SIZE + PADDING;
+
+      unplacedEntries.forEach(entry => {
+        let placed = false;
+        for (let y = minY; ; y += stepY) {
+          const currentY = Math.min(y, maxY);
+          for (let x = minX; ; x += stepX) {
+            const currentX = Math.min(x, maxX);
+
+            const overlaps = Object.values(resolved).some(pos => {
+              const overlapX = !(currentX > pos.x + ICON_SIZE + resolvePadding || currentX + ICON_SIZE + resolvePadding < pos.x);
+              const overlapY = !(currentY > pos.y + ICON_SIZE + resolvePadding || currentY + ICON_SIZE + resolvePadding < pos.y);
+              return overlapX && overlapY;
+            });
+
+            if (!overlaps) {
+              resolved[entry.id] = { x: currentX, y: currentY, z: 10 };
+              placed = true;
+              break;
+            }
+
+            if (x >= maxX) break;
+          }
+          if (placed || y >= maxY) break;
+        }
+
+        if (!placed) {
+          resolved[entry.id] = { x: minX, y: minY, z: 10 };
+        }
+      });
+
+      // Simple collision resolution to prevent exact stacking
+      const allKeys = Object.keys(resolved);
       for (let i = 0; i < 20; i++) {
         let changed = false;
-        layoutConfigs.forEach((appA, idxA) => {
-          layoutConfigs.forEach((appB, idxB) => {
+        allKeys.forEach((idA, idxA) => {
+          allKeys.forEach((idB, idxB) => {
             if (idxA === idxB) return;
-            const posA = resolved[appA.id];
-            const posB = resolved[appB.id];
+            const posA = resolved[idA];
+            const posB = resolved[idB];
+
+            if (!posA || !posB) return;
 
             // AABB Collision Check
             const overlapX = !(posA.x > posB.x + ICON_SIZE + resolvePadding || posA.x + ICON_SIZE + resolvePadding < posB.x);
