@@ -837,6 +837,7 @@ export const SystemSettingsAppView: React.FC = () => {
         if (!isDescendant(draggedEntryId, entry.id, windowsList)) {
           setDropTarget({
             type: 'folder_nest',
+            groupId,
             id: entry.id,
           });
         }
@@ -907,16 +908,20 @@ export const SystemSettingsAppView: React.FC = () => {
 
     const isTargetReorderAbove =
       dropTarget?.type === 'reorder' &&
+      dropTarget?.groupId === groupId &&
       dropTarget?.targetId === entry.id &&
       dropTarget?.position === 'above';
 
     const isTargetReorderBelow =
       dropTarget?.type === 'reorder' &&
+      dropTarget?.groupId === groupId &&
       dropTarget?.targetId === entry.id &&
       dropTarget?.position === 'below';
 
     const isTargetNestFolder =
-      dropTarget?.type === 'folder_nest' && dropTarget?.id === entry.id;
+      dropTarget?.type === 'folder_nest' &&
+      dropTarget?.groupId === groupId &&
+      dropTarget?.id === entry.id;
 
     const isNotInDockOrder = groupId === 'DOCK' && !dockOrder.includes(entry.id);
 
@@ -940,8 +945,8 @@ export const SystemSettingsAppView: React.FC = () => {
           onDragLeave={(e) => {
             e.stopPropagation();
             if (
-              (dropTarget?.type === 'reorder' && dropTarget?.targetId === entry.id) ||
-              (dropTarget?.type === 'folder_nest' && dropTarget?.id === entry.id)
+              (dropTarget?.type === 'reorder' && dropTarget?.groupId === groupId && dropTarget?.targetId === entry.id) ||
+              (dropTarget?.type === 'folder_nest' && dropTarget?.groupId === groupId && dropTarget?.id === entry.id)
             ) {
               setDropTarget(null);
             }
