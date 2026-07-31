@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { AnimatePresence, motion, useMotionValue, animate } from 'motion/react';
 import { Smartphone, Tablet, Monitor, Wifi, Battery, ChevronDown, X } from 'lucide-react';
 import { useWindowManager, WindowManagerProvider, type WindowState } from '@/src/hooks/useWindowManager';
@@ -203,6 +203,16 @@ const DesktopApp = () => {
 
   const [mobilePage, setMobilePage] = useState(0);
   const dragX = useMotionValue(0);
+  const [isPageDotsVisible, setIsPageDotsVisible] = useState(false);
+  const pageDotsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pageDotsTimeoutRef.current) {
+        clearTimeout(pageDotsTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -856,11 +866,28 @@ const DesktopApp = () => {
 
       {/* Swipeable Desktop Layer for Mobile */}
       <motion.div
-        className={cn("absolute inset-0 z-[5]", isMobile ? "pointer-events-auto touch-none" : "pointer-events-none overflow-hidden")}
-        drag={isMobile ? "x" : false}
+        className={cn(
+          "absolute inset-0 z-[5]",
+          isMobile && !isMobileAppOpen && !isDraggingAny ? "pointer-events-auto touch-none" : "pointer-events-none overflow-hidden"
+        )}
+        drag={isMobile && !isMobileAppOpen && !isDraggingAny ? "x" : false}
         dragConstraints={isMobile ? { left: -window.innerWidth, right: 0 } : undefined}
         dragElastic={0.2}
         style={{ x: dragX }}
+        onDragStart={() => {
+          if (!isMobile) return;
+          if (pageDotsTimeoutRef.current) {
+            clearTimeout(pageDotsTimeoutRef.current);
+            pageDotsTimeoutRef.current = null;
+          }
+          setIsPageDotsVisible(true);
+        }}
+        onDrag={() => {
+          if (!isMobile) return;
+          if (!isPageDotsVisible) {
+            setIsPageDotsVisible(true);
+          }
+        }}
         onDragEnd={(_, info) => {
           if (!isMobile) return;
           const threshold = window.innerWidth / 4;
@@ -873,6 +900,14 @@ const DesktopApp = () => {
           } else {
             animate(dragX, -mobilePage * window.innerWidth, { type: "spring", stiffness: 300, damping: 30, mass: 0.8 });
           }
+
+          if (pageDotsTimeoutRef.current) {
+            clearTimeout(pageDotsTimeoutRef.current);
+          }
+          pageDotsTimeoutRef.current = setTimeout(() => {
+            setIsPageDotsVisible(false);
+            pageDotsTimeoutRef.current = null;
+          }, 2000);
         }}
       >
         {/* Page 1 (0) */}
@@ -1008,23 +1043,26 @@ const DesktopApp = () => {
       {/* Page Dots Indicator */}
       {isMobile && !isMobileAppOpen && (
         <div 
-          className="absolute left-1/2 -translate-x-1/2 flex gap-1.5 z-[60] pointer-events-auto"
-          style={{ bottom: 'calc(108px + env(safe-area-inset-bottom, 0px))' }}
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-opacity",
+            isPageDotsVisible ? "opacity-100 duration-150" : "opacity-0 duration-400"
+          )}
+          style={{ bottom: 'calc(116px + env(safe-area-inset-bottom, 0px))' }}
         >
-          <button 
-            onClick={() => {
-              setMobilePage(0);
-              animate(dragX, 0, { type: "spring", stiffness: 300, damping: 30, mass: 0.8 });
-            }}
-            className={cn("w-2 h-2 rounded-full transition-all duration-300", mobilePage === 0 ? "bg-white scale-110" : "bg-white/30")} 
-          />
-          <button 
-            onClick={() => {
-              setMobilePage(1);
-              animate(dragX, -window.innerWidth, { type: "spring", stiffness: 300, damping: 30, mass: 0.8 });
-            }}
-            className={cn("w-2 h-2 rounded-full transition-all duration-300", mobilePage === 1 ? "bg-white scale-110" : "bg-white/30")} 
-          />
+          <div className="bg-black/35 backdrop-blur-md border border-white/15 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm pointer-events-none">
+            <div 
+              className={cn(
+                "w-[7px] h-[7px] rounded-full transition-all duration-200 pointer-events-none",
+                mobilePage === 0 ? "bg-white scale-110" : "bg-white/30"
+              )} 
+            />
+            <div 
+              className={cn(
+                "w-[7px] h-[7px] rounded-full transition-all duration-200 pointer-events-none",
+                mobilePage === 1 ? "bg-white scale-110" : "bg-white/30"
+              )} 
+            />
+          </div>
         </div>
       )}
 

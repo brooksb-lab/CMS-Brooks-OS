@@ -42,17 +42,108 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
     const el = containerRef.current;
     if (!el) return;
 
-    if (e.pointerType === 'mouse') {
-      e.preventDefault();
+    const isTouch = (e.pointerType === 'touch') || (isTouchUI && e.pointerType !== 'mouse');
+
+    if (!isTouch) {
+      if (e.pointerType === 'mouse') {
+        e.preventDefault();
+      }
+      
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch (err) {}
+      
+      isDraggingRef.current = true;
+      hasMovedRef.current = false;
+      startPosRef.current = { x: e.clientX, y: e.clientY };
+
+      const rect = el.getBoundingClientRect();
+      offsetRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+
+      const handlePointerMove = (e: PointerEvent) => {
+        const dx = e.clientX - startPosRef.current.x;
+        const dy = e.clientY - startPosRef.current.y;
+        const threshold = 3;
+
+        if (!hasMovedRef.current) {
+          if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+            hasMovedRef.current = true;
+            setIsDragging(true);
+            document.body.style.cursor = 'grabbing';
+            setIsDraggingAny?.(true);
+            onDragStart?.(id);
+            el.style.zIndex = '1000';
+          } else {
+            return;
+          }
+        }
+
+        const MENU_BAR = 24;
+        const DOCK_SAFE = 80;
+        const iconW = el.offsetWidth || 100;
+        const iconH = el.offsetHeight || 116;
+
+        let x = e.clientX - offsetRef.current.x;
+        let y = e.clientY - offsetRef.current.y;
+
+        x = Math.max(0, Math.min(x, window.innerWidth - iconW));
+        y = Math.max(MENU_BAR, Math.min(y, window.innerHeight - DOCK_SAFE - iconH));
+
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+
+        if (isSelected && onDragMove) {
+          onDragMove(id, e.clientX - startPosRef.current.x, e.clientY - startPosRef.current.y);
+        }
+      };
+
+      const handlePointerUp = (e: PointerEvent) => {
+        isDraggingRef.current = false;
+        setIsDragging(false);
+        document.body.style.cursor = '';
+        const wasDragged = hasMovedRef.current;
+
+        setIsDraggingAny?.(false);
+        el.style.zIndex = zIndex.toString();
+        
+        if (wasDragged) {
+          if (onDragEnd) {
+            onDragEnd(id, el.getBoundingClientRect());
+          }
+          setTimeout(() => {
+            hasMovedRef.current = false;
+          }, 250);
+        } else {
+          hasMovedRef.current = false;
+        }
+
+        const target = e.target as HTMLElement | null;
+        if (target && target.releasePointerCapture) {
+          try {
+            target.releasePointerCapture(e.pointerId);
+          } catch(err) {}
+        }
+
+        document.removeEventListener('pointermove', handlePointerMove);
+        document.removeEventListener('pointerup', handlePointerUp);
+        document.removeEventListener('pointercancel', handlePointerUp);
+      };
+
+      document.addEventListener('pointermove', handlePointerMove);
+      document.addEventListener('pointerup', handlePointerUp);
+      document.addEventListener('pointercancel', handlePointerUp);
+      return;
     }
-    
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch (err) {}
-    
-    isDraggingRef.current = true;
-    hasMovedRef.current = false;
+
+    // Mobile touch pointer handling
+    const pointerId = e.pointerId;
+    const target = e.currentTarget;
     startPosRef.current = { x: e.clientX, y: e.clientY };
+    hasMovedRef.current = false;
+    isDraggingRef.current = false;
 
     const rect = el.getBoundingClientRect();
     offsetRef.current = {
@@ -60,79 +151,100 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
       y: e.clientY - rect.top
     };
 
-    const handlePointerMove = (e: PointerEvent) => {
-      const dx = e.clientX - startPosRef.current.x;
-      const dy = e.clientY - startPosRef.current.y;
-      const threshold = 3;
+    let isLongPressPending = true;
+    let isMobileDragging = false;
 
-      if (!hasMovedRef.current) {
-        if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-          hasMovedRef.current = true;
-          setIsDragging(true);
-          document.body.style.cursor = 'grabbing';
-          setIsDraggingAny?.(true);
-          onDragStart?.(id);
-          el.style.zIndex = '1000';
-        } else {
-          return;
-        }
+    const longPressTimer = setTimeout(() => {
+      if (!isLongPressPending) return;
+      isLongPressPending = false;
+      isMobileDragging = true;
+      isDraggingRef.current = true;
+      setIsDragging(true);
+      setIsDraggingAny?.(true);
+      onDragStart?.(id);
+      el.style.zIndex = '1000';
+
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try {
+          navigator.vibrate(40);
+        } catch (err) {}
       }
 
-      const MENU_BAR = 24;
-      const DOCK_SAFE = 80;
-      const iconW = el.offsetWidth || 100;
-      const iconH = el.offsetHeight || 116;
+      try {
+        target.setPointerCapture(pointerId);
+      } catch (err) {}
+    }, 500);
 
-      let x = e.clientX - offsetRef.current.x;
-      let y = e.clientY - offsetRef.current.y;
+    const handleTouchMove = (e: PointerEvent) => {
+      const dx = e.clientX - startPosRef.current.x;
+      const dy = e.clientY - startPosRef.current.y;
+      const dist = Math.hypot(dx, dy);
 
-      x = Math.max(0, Math.min(x, window.innerWidth - iconW));
-      y = Math.max(MENU_BAR, Math.min(y, window.innerHeight - DOCK_SAFE - iconH));
+      if (isLongPressPending) {
+        if (dist > 8) {
+          isLongPressPending = false;
+          clearTimeout(longPressTimer);
+          hasMovedRef.current = true;
+        }
+        return;
+      }
 
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
+      if (isMobileDragging) {
+        hasMovedRef.current = true;
+        const MENU_BAR = 24;
+        const DOCK_SAFE = 80;
+        const iconW = el.offsetWidth || 100;
+        const iconH = el.offsetHeight || 116;
 
-      if (isSelected && onDragMove) {
-        onDragMove(id, e.clientX - startPosRef.current.x, e.clientY - startPosRef.current.y);
+        let x = e.clientX - offsetRef.current.x;
+        let y = e.clientY - offsetRef.current.y;
+
+        x = Math.max(0, Math.min(x, window.innerWidth - iconW));
+        y = Math.max(MENU_BAR, Math.min(y, window.innerHeight - DOCK_SAFE - iconH));
+
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+
+        if (isSelected && onDragMove) {
+          onDragMove(id, e.clientX - startPosRef.current.x, e.clientY - startPosRef.current.y);
+        }
       }
     };
 
-    const handlePointerUp = (e: PointerEvent) => {
-      isDraggingRef.current = false;
-      setIsDragging(false);
-      document.body.style.cursor = '';
-      const wasDragged = hasMovedRef.current;
+    const handleTouchUp = (e: PointerEvent) => {
+      clearTimeout(longPressTimer);
 
-      setIsDraggingAny?.(false);
-      el.style.zIndex = zIndex.toString();
-      
-      if (wasDragged) {
+      if (isLongPressPending) {
+        isLongPressPending = false;
+      }
+
+      if (isMobileDragging) {
+        isMobileDragging = false;
+        isDraggingRef.current = false;
+        setIsDragging(false);
+        setIsDraggingAny?.(false);
+        el.style.zIndex = zIndex.toString();
+
         if (onDragEnd) {
           onDragEnd(id, el.getBoundingClientRect());
         }
-        // Keep hasMovedRef true briefly to prevent click handler from triggering
         setTimeout(() => {
           hasMovedRef.current = false;
         }, 250);
-      } else {
-        hasMovedRef.current = false;
-      }
 
-      const target = e.target as HTMLElement | null;
-      if (target && target.releasePointerCapture) {
         try {
           target.releasePointerCapture(e.pointerId);
-        } catch(err) {}
+        } catch (err) {}
       }
 
-      document.removeEventListener('pointermove', handlePointerMove);
-      document.removeEventListener('pointerup', handlePointerUp);
-      document.removeEventListener('pointercancel', handlePointerUp);
+      document.removeEventListener('pointermove', handleTouchMove);
+      document.removeEventListener('pointerup', handleTouchUp);
+      document.removeEventListener('pointercancel', handleTouchUp);
     };
 
-    document.addEventListener('pointermove', handlePointerMove);
-    document.addEventListener('pointerup', handlePointerUp);
-    document.addEventListener('pointercancel', handlePointerUp);
+    document.addEventListener('pointermove', handleTouchMove);
+    document.addEventListener('pointerup', handleTouchUp);
+    document.addEventListener('pointercancel', handleTouchUp);
   };
 
   return (
