@@ -16,6 +16,7 @@ export type WindowState = {
   initialY?: string | number;
   showOnDesktop?: boolean;
   showInDock?: boolean;
+  trashed?: boolean;
   variant?: 'default' | 'folder';
   folderContents?: string[];
   launchRect?: { top: number; left: number; width: number; height: number };

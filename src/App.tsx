@@ -363,7 +363,7 @@ const DesktopApp = () => {
 
       // Find unplaced registry entries with showOnDesktop true
       const unplacedEntries = windowsRegistryData
-        .filter(entry => entry.showOnDesktop && !resolved[entry.id])
+        .filter(entry => entry.showOnDesktop && !entry.trashed && !resolved[entry.id])
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
       const resolvePadding = 16;
@@ -525,7 +525,7 @@ const DesktopApp = () => {
     // Register all windows from registry data (Step B)
     windowsRegistryData.forEach(entry => {
       const derivedFolderContents = windowsRegistryData
-        .filter(w => w.folder === entry.id)
+        .filter(w => w.folder === entry.id && !w.trashed)
         .sort((a, b) => a.order - b.order)
         .map(w => w.id);
 
@@ -548,6 +548,7 @@ const DesktopApp = () => {
         initialY: initY,
         showOnDesktop: entry.showOnDesktop,
         showInDock: entry.showInDock,
+        trashed: entry.trashed,
         isFullScreen: entry.isFullScreen,
         width: entry.width ?? undefined,
         height: entry.height ?? undefined,
@@ -563,10 +564,10 @@ const DesktopApp = () => {
   }, [registerWindow]);
 
   const appList = Object.values(windows) as WindowState[];
-  const desktopApps = appList.filter(app => app.showOnDesktop !== false);
+  const desktopApps = appList.filter(app => app.showOnDesktop !== false && !app.trashed);
   
   const currentDockOrder = isMobile ? MOBILE_DOCK_ORDER : DESKTOP_DOCK_ORDER;
-  const dockApps = currentDockOrder.map(id => windows[id]).filter(app => app && app.showInDock);
+  const dockApps = currentDockOrder.map(id => windows[id]).filter(app => app && app.showInDock && !app.trashed);
   
   // Add any other open apps that aren't in the fixed dock
   const otherOpenApps = appList.filter(app => 

@@ -31,6 +31,7 @@ export interface WindowDataEntry {
   height: number | null;
   showOnDesktop?: boolean;
   showInDock?: boolean;
+  trashed?: boolean;
   isFullScreen?: boolean;
   variant?: 'default' | 'folder' | string | null;
   order: number;

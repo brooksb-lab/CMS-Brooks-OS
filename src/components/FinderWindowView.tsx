@@ -136,7 +136,7 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
       switch (currentLoc.path) {
         case 'Desktop':
           return Object.values(windows)
-            .filter((app: any) => app.showOnDesktop !== false)
+            .filter((app: any) => app.showOnDesktop !== false && !app.trashed)
             .map((app: any) => ({
               id: app.id,
               title: app.title,
@@ -148,7 +148,7 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
         case 'Applications':
           return DOCK_ORDER
             .map((id) => windows[id])
-            .filter((app: any) => app && app.showInDock !== false)
+            .filter((app: any) => app && app.showInDock !== false && !app.trashed)
             .map((app: any) => ({
               id: app.id,
               title: app.title,
@@ -159,24 +159,28 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
 
         case 'Film': {
           const ids = windows['film']?.folderContents || [];
-          return ids.map((id: string) => ({
-            id,
-            title: windows[id]?.title || id,
-            icon: windows[id]?.icon,
-            variant: windows[id]?.variant,
-            folderContents: windows[id]?.folderContents,
-          }));
+          return ids
+            .filter((id: string) => !windows[id]?.trashed)
+            .map((id: string) => ({
+              id,
+              title: windows[id]?.title || id,
+              icon: windows[id]?.icon,
+              variant: windows[id]?.variant,
+              folderContents: windows[id]?.folderContents,
+            }));
         }
 
         case 'Apparel': {
           const ids = windows['apparel']?.folderContents || [];
-          return ids.map((id: string) => ({
-            id,
-            title: windows[id]?.title || id,
-            icon: windows[id]?.icon,
-            variant: windows[id]?.variant,
-            folderContents: windows[id]?.folderContents,
-          }));
+          return ids
+            .filter((id: string) => !windows[id]?.trashed)
+            .map((id: string) => ({
+              id,
+              title: windows[id]?.title || id,
+              icon: windows[id]?.icon,
+              variant: windows[id]?.variant,
+              folderContents: windows[id]?.folderContents,
+            }));
         }
 
         case 'Archive':
@@ -185,7 +189,7 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
             { id: 'Library', title: 'Library', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
             { id: 'System', title: 'System', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
             { id: 'Users', title: 'Users', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-            ...(windows['resume']
+            ...(windows['resume'] && !windows['resume'].trashed
               ? [
                   {
                     id: 'resume',
@@ -197,25 +201,29 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
           ];
 
         case 'Trash':
-          return [
-            { id: 'trash_1', title: 'UNTITLED 01', icon: GENERIC_DOC_ICON },
-            { id: 'trash_2', title: 'UNTITLED 02', icon: GENERIC_DOC_ICON },
-            { id: 'trash_3', title: 'UNTITLED 03', icon: GENERIC_DOC_ICON },
-            { id: 'trash_4', title: 'UNTITLED 04', icon: GENERIC_DOC_ICON },
-            { id: 'trash_5', title: 'UNTITLED 05', icon: GENERIC_DOC_ICON },
-          ];
+          return Object.values(windows)
+            .filter((app: any) => app.trashed === true)
+            .map((app: any) => ({
+              id: app.id,
+              title: app.title,
+              icon: app.icon || GENERIC_DOC_ICON,
+              variant: app.variant,
+              folderContents: app.folderContents,
+            }));
       }
     } else {
       // Folder location
       const app = windows[currentLoc.id];
       if (app && app.folderContents && app.folderContents.length > 0) {
-        return app.folderContents.map((id: string) => ({
-          id,
-          title: windows[id]?.title || id,
-          icon: windows[id]?.icon,
-          variant: windows[id]?.variant,
-          folderContents: windows[id]?.folderContents,
-        }));
+        return app.folderContents
+          .filter((id: string) => !windows[id]?.trashed)
+          .map((id: string) => ({
+            id,
+            title: windows[id]?.title || id,
+            icon: windows[id]?.icon,
+            variant: windows[id]?.variant,
+            folderContents: windows[id]?.folderContents,
+          }));
       }
       return [];
     }
