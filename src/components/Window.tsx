@@ -110,6 +110,8 @@ export const Window: React.FC<WindowProps> = ({
   const defaultW = typeof initialWidth === "number" ? initialWidth : 600;
   const defaultH = typeof initialHeight === "number" ? initialHeight : 400;
 
+  const isPhoneMobile = isMobile && typeof window !== "undefined" && window.innerWidth < 768;
+
   const centeredT =
     initialY !== undefined
       ? initialY
@@ -128,26 +130,30 @@ export const Window: React.FC<WindowProps> = ({
   const width = useMotionValue(
     launchRect
       ? launchRect.width
-      : (isFullScreen || isMobile) && id !== "stickies"
+      : (isFullScreen || isPhoneMobile) && id !== "stickies"
         ? window.innerWidth
         : defaultW,
   );
   const height = useMotionValue(
     launchRect
       ? launchRect.height
-      : (isFullScreen || isMobile) && id !== "stickies"
-        ? isMobile
-          ? window.innerHeight
-          : window.innerHeight - 32
+      : (isFullScreen || isPhoneMobile) && id !== "stickies"
+        ? isPhoneMobile
+          ? "calc(100dvh - 40px - env(safe-area-inset-top, 0px))"
+          : isMobile
+            ? window.innerHeight
+            : window.innerHeight - 32
         : defaultH,
   );
   const top = useMotionValue(
     launchRect
       ? launchRect.top
-      : (isFullScreen || isMobile) && id !== "stickies"
-        ? isMobile
-          ? 0
-          : 32
+      : (isFullScreen || isPhoneMobile) && id !== "stickies"
+        ? isPhoneMobile
+          ? "calc(40px + env(safe-area-inset-top, 0px))"
+          : isMobile
+            ? 0
+            : 32
         : finalCenteredT,
   );
   const left = useMotionValue(
@@ -285,7 +291,7 @@ export const Window: React.FC<WindowProps> = ({
 
         // Targeted expansion based on device/settings
         const targetW =
-          (isFullScreen || isMobile) && id !== "stickies"
+          (isFullScreen || isPhoneMobile) && id !== "stickies"
             ? window.innerWidth
             : typeof initialWidth === "number"
               ? initialWidth
@@ -294,14 +300,16 @@ export const Window: React.FC<WindowProps> = ({
           typeof initialHeight === "number"
             ? initialHeight
             : parseFloat(initialHeight as string);
-        const targetH =
-          (isFullScreen || isMobile) && id !== "stickies"
-            ? isMobile
-              ? window.innerHeight
-              : window.innerHeight - 32
+        const targetH: any =
+          (isFullScreen || isPhoneMobile) && id !== "stickies"
+            ? isPhoneMobile
+              ? "calc(100dvh - 40px - env(safe-area-inset-top, 0px))"
+              : isMobile
+                ? window.innerHeight
+                : window.innerHeight - 32
             : baseTargetH;
 
-        let targetT = initialY !== undefined ? initialY : 0;
+        let targetT: any = initialY !== undefined ? initialY : 0;
         let targetL = initialX !== undefined ? initialX : 0;
 
         if (!isFullScreen && (!isMobile || id === "stickies")) {
@@ -309,12 +317,15 @@ export const Window: React.FC<WindowProps> = ({
             const menuBarH = isMobile ? 0 : 32;
             const dockH = isMobile ? 0 : 100;
             const availableH = window.innerHeight - menuBarH - dockH;
-            const offset = Math.max(0, (availableH - targetH) / 2);
+            const offset = Math.max(0, (availableH - (typeof targetH === 'number' ? targetH : window.innerHeight)) / 2);
             targetT = menuBarH + offset;
           }
           if (initialX === undefined) {
             targetL = Math.max(0, (window.innerWidth - targetW) / 2);
           }
+        } else if (isPhoneMobile && id !== "stickies") {
+          targetT = "calc(40px + env(safe-area-inset-top, 0px))";
+          targetL = 0;
         } else if (isMobile && id !== "stickies") {
           targetT = 0;
           targetL = 0;
@@ -338,11 +349,23 @@ export const Window: React.FC<WindowProps> = ({
       } else {
         // Fallback or static launch
         opacity.set(1);
-        if ((isFullScreen || isMobile) && id !== "stickies") {
+        if ((isFullScreen || isPhoneMobile) && id !== "stickies") {
           setIsMaximized(true);
           width.set(window.innerWidth);
-          height.set(isMobile ? window.innerHeight : window.innerHeight - 32);
-          top.set(isMobile ? 0 : 32);
+          height.set(
+            isPhoneMobile
+              ? "calc(100dvh - 40px - env(safe-area-inset-top, 0px))"
+              : isMobile
+                ? window.innerHeight
+                : window.innerHeight - 32
+          );
+          top.set(
+            isPhoneMobile
+              ? "calc(40px + env(safe-area-inset-top, 0px))"
+              : isMobile
+                ? 0
+                : 32
+          );
           left.set(0);
           borderRadius.set(0);
         }
@@ -606,13 +629,13 @@ export const Window: React.FC<WindowProps> = ({
       onPointerDown={onFocus}
       style={{
         zIndex,
-        width,
-        height,
-        top,
-        left,
+        width: isPhoneMobile && id !== "stickies" ? "100vw" : width,
+        height: isPhoneMobile && id !== "stickies" ? "calc(100dvh - 40px - env(safe-area-inset-top, 0px))" : height,
+        top: isPhoneMobile && id !== "stickies" ? "calc(40px + env(safe-area-inset-top, 0px))" : top,
+        left: isPhoneMobile && id !== "stickies" ? 0 : left,
         x,
         y,
-        borderRadius,
+        borderRadius: isPhoneMobile && id !== "stickies" ? 0 : borderRadius,
         opacity,
         scale,
         transformOrigin,
@@ -714,12 +737,16 @@ export const Window: React.FC<WindowProps> = ({
               !isMaximized && "cursor-grab active:cursor-grabbing",
             )}
             style={
-              isMobile
+              isPhoneMobile
                 ? {
-                    paddingTop: "env(safe-area-inset-top, 0px)",
-                    height: "calc(54px + env(safe-area-inset-top, 0px))",
+                    height: "50px",
                   }
-                : undefined
+                : isMobile
+                  ? {
+                      paddingTop: "env(safe-area-inset-top, 0px)",
+                      height: "calc(54px + env(safe-area-inset-top, 0px))",
+                    }
+                  : undefined
             }
             onPointerDown={(e) => {
               e.stopPropagation();

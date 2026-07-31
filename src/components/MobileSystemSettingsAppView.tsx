@@ -648,6 +648,7 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
       <div
         ref={listContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 touch-pan-y"
+        style={{ paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))' }}
       >
         {/* DELETE CONFIRMATION DIALOG / BANNER */}
         {confirmDeleteId && (

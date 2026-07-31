@@ -149,6 +149,11 @@ const FolderContent = ({ appId, appIds = [], windows, toggleWindow, isTouchUI, c
 
 const DesktopApp = () => {
   const { windows, activeWindowId, registerWindow, openWindow, toggleWindow, closeWindow, minimizeWindow, setMinimizeRect, focusWindow, toggleFullScreen } = useWindowManager();
+  const { device, setOverride, override } = useDeviceType();
+  const isMobile = device === 'mobile';
+  const isTablet = device === 'tablet';
+  const isDesktop = device === 'desktop';
+  const isTouchUI = isMobile || isTablet;
   const [isHoveringDockArea, setIsHoveringDockArea] = useState(false);
   const isAnyWindowMaximized = (Object.values(windows) as WindowState[]).some(w => w.isOpen && !w.isMinimized && w.isFullScreen);
   const desktopRef = React.useRef<HTMLDivElement>(null);
@@ -187,6 +192,27 @@ const DesktopApp = () => {
       window.removeEventListener('gesturechange', handleGesture, { capture: true } as any);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const preventWindowScroll = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+    window.addEventListener('scroll', preventWindowScroll);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('scroll', preventWindowScroll);
+      window.visualViewport.addEventListener('resize', preventWindowScroll);
+    }
+    return () => {
+      window.removeEventListener('scroll', preventWindowScroll);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('scroll', preventWindowScroll);
+        window.visualViewport.removeEventListener('resize', preventWindowScroll);
+      }
+    };
+  }, [isMobile]);
 
   const handleIconDragStart = React.useCallback((id: string) => {
     // Bring to front logic
@@ -302,12 +328,6 @@ const DesktopApp = () => {
     }
   }, [isDraggingAny]);
 
-  const { device, override, setOverride } = useDeviceType();
-  const isMobile = device === 'mobile';
-  const isTablet = device === 'tablet';
-  const isDesktop = device === 'desktop';
-  const isTouchUI = !isDesktop;
-  
   const isDevEnv = window.location.hostname.includes('-dev-') || window.location.hostname.includes('localhost');
 
   useEffect(() => {
@@ -756,12 +776,20 @@ const DesktopApp = () => {
       )}
 
       {isTouchUI ? (
-        <div className={cn(
-          "absolute top-0 inset-x-0 z-[10000] h-12 flex items-center justify-between text-white font-semibold text-sm mix-blend-difference select-none",
-          isTablet ? "px-8 pt-5" : "px-6 pt-2"
-        )}>
-          <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          <div className="flex items-center gap-2">
+        <div 
+          className={cn(
+            "absolute top-0 inset-x-0 z-[10000] flex items-center justify-between text-white font-semibold text-sm mix-blend-difference select-none",
+            isTablet ? "h-12 px-8 pt-5" : "px-6"
+          )}
+          style={!isTablet ? {
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            height: 'calc(40px + env(safe-area-inset-top, 0px))',
+          } : undefined}
+        >
+          <div className="flex items-center h-10">
+            <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div className="flex items-center gap-2 h-10">
             <div className="w-4 h-4 rounded-full border-2 border-white/50 flex items-center justify-center">
               <div className="w-1 h-1 bg-white rounded-full" />
             </div>
@@ -944,7 +972,10 @@ const DesktopApp = () => {
 
       {/* Page Dots Indicator */}
       {isMobile && (
-        <div className="absolute bottom-[108px] left-1/2 -translate-x-1/2 flex gap-1.5 z-[60] pointer-events-auto">
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 flex gap-1.5 z-[60] pointer-events-auto"
+          style={{ bottom: 'calc(108px + env(safe-area-inset-bottom, 0px))' }}
+        >
           <button 
             onClick={() => {
               setMobilePage(0);
@@ -1015,12 +1046,15 @@ const DesktopApp = () => {
           />
         </div>
       ) : (
-        <div className={cn(
-          "absolute z-50 flex items-center shadow-[0_10px_40px_rgba(0,0,0,0.5)]",
-          isTablet 
-            ? "bottom-[24px] left-1/2 -translate-x-1/2 w-fit justify-center gap-[20px] px-6 py-4 rounded-[34px]" 
-            : "bottom-[16px] left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[420px] justify-between px-5 py-4 rounded-[34px]"
-        )}>
+        <div 
+          className={cn(
+            "absolute z-50 flex items-center shadow-[0_10px_40px_rgba(0,0,0,0.5)]",
+            isTablet 
+              ? "bottom-[24px] left-1/2 -translate-x-1/2 w-fit justify-center gap-[20px] px-6 py-4 rounded-[34px]" 
+              : "left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[420px] justify-between px-5 py-4 rounded-[34px]"
+          )}
+          style={!isTablet ? { bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' } : undefined}
+        >
           {/* Background */}
           <div className="absolute inset-0 liquid-glass rounded-[34px] border border-white/20 -z-10 pointer-events-none" />
           
