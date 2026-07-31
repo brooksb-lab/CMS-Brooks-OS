@@ -594,7 +594,7 @@
       "folder": null,
       "width": 1000,
       "height": 700,
-      "isFullScreen": false,
+      "isFullScreen": true,
       "variant": null,
       "order": 20,
       "visible": true,
@@ -604,8 +604,8 @@
       },
       "dockBreakpoints": [
         "desktop",
-        "tablet",
-        "mobile"
+        "mobile",
+        "tablet"
       ]
     },
     {
