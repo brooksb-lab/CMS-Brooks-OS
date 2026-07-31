@@ -7,16 +7,11 @@
     "clo",
     "photoshop",
     "flora_ai",
+    "contact_folder",
     "mail",
     "brooks_chat",
     "freeform",
     "spotify"
-  ],
-  "mobileDockOrder": [
-    "clo",
-    "photoshop",
-    "flora_ai",
-    "contact_folder"
   ],
   "desktopOrder": [
     "3d_design",
@@ -35,12 +30,12 @@
       "folder": null,
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": "folder",
       "order": 0,
       "visible": true,
-      "content": null
+      "content": null,
+      "dockBreakpoints": []
     },
     {
       "id": "3d_design",
@@ -49,7 +44,6 @@
       "folder": "desktop",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 1,
@@ -76,7 +70,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "scatter",
@@ -85,7 +80,6 @@
       "folder": "desktop",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 2,
@@ -112,7 +106,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "concept_design",
@@ -121,7 +116,6 @@
       "folder": "desktop",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 3,
@@ -148,7 +142,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "on_no",
@@ -157,7 +152,6 @@
       "folder": "desktop",
       "width": null,
       "height": null,
-      "showInDock": false,
       "isFullScreen": true,
       "variant": null,
       "order": 4,
@@ -180,7 +174,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "resume",
@@ -189,7 +184,6 @@
       "folder": null,
       "width": 600,
       "height": 700,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 5,
@@ -212,7 +206,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "old_gold",
@@ -221,7 +216,6 @@
       "folder": "film",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 6,
@@ -248,7 +242,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "fmsb",
@@ -257,7 +252,6 @@
       "folder": "film",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 7,
@@ -284,7 +278,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "problemista",
@@ -293,7 +288,6 @@
       "folder": "film",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 8,
@@ -320,7 +314,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "spaceman",
@@ -329,7 +324,6 @@
       "folder": "film",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 9,
@@ -356,7 +350,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "sekiro",
@@ -365,7 +360,6 @@
       "folder": "film",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 10,
@@ -392,7 +386,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "sacca_macana",
@@ -401,7 +396,6 @@
       "folder": "apparel",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 11,
@@ -428,7 +422,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "adriatissimo",
@@ -437,7 +432,6 @@
       "folder": "apparel",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 12,
@@ -464,7 +458,8 @@
             ]
           }
         ]
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "macintosh_hd",
@@ -473,7 +468,6 @@
       "folder": "desktop",
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": "folder",
       "order": 13,
@@ -484,7 +478,8 @@
         "props": {
           "initialPath": "Archive"
         }
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "trash",
@@ -493,7 +488,6 @@
       "folder": null,
       "width": 800,
       "height": 600,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": "folder",
       "order": 14,
@@ -504,7 +498,8 @@
         "props": {
           "initialPath": "Trash"
         }
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "stickies",
@@ -513,7 +508,6 @@
       "folder": null,
       "width": 300,
       "height": 236,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": null,
       "order": 15,
@@ -522,7 +516,8 @@
         "type": "component",
         "name": "StickiesAppView",
         "text": "folders: working\napps: working\nshop: in progress\narchive: still a mess, fix before launch\nscatter: swap images\nnote: leave this one up"
-      }
+      },
+      "dockBreakpoints": []
     },
     {
       "id": "film",
@@ -531,12 +526,12 @@
       "folder": "desktop",
       "width": 500,
       "height": 350,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": "folder",
       "order": 16,
       "visible": true,
-      "content": null
+      "content": null,
+      "dockBreakpoints": []
     },
     {
       "id": "apparel",
@@ -545,12 +540,12 @@
       "folder": "desktop",
       "width": 500,
       "height": 350,
-      "showInDock": false,
       "isFullScreen": false,
       "variant": "folder",
       "order": 17,
       "visible": true,
-      "content": null
+      "content": null,
+      "dockBreakpoints": []
     },
     {
       "id": "mail",
@@ -559,7 +554,6 @@
       "folder": "contact_folder",
       "width": 800,
       "height": 600,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 18,
@@ -567,7 +561,11 @@
       "content": {
         "type": "component",
         "name": "MailAppView"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet"
+      ]
     },
     {
       "id": "brooks_chat",
@@ -576,7 +574,6 @@
       "folder": "contact_folder",
       "width": 700,
       "height": 750,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 19,
@@ -584,7 +581,11 @@
       "content": {
         "type": "component",
         "name": "MessagesApp"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet"
+      ]
     },
     {
       "id": "clo",
@@ -593,7 +594,6 @@
       "folder": null,
       "width": 1000,
       "height": 700,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 20,
@@ -601,7 +601,12 @@
       "content": {
         "type": "component",
         "name": "CloAppView"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet",
+        "mobile"
+      ]
     },
     {
       "id": "photoshop",
@@ -610,7 +615,6 @@
       "folder": null,
       "width": 1000,
       "height": 700,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 21,
@@ -618,7 +622,12 @@
       "content": {
         "type": "component",
         "name": "PhotoshopView"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet",
+        "mobile"
+      ]
     },
     {
       "id": "flora_ai",
@@ -627,7 +636,6 @@
       "folder": null,
       "width": 1000,
       "height": 750,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 22,
@@ -635,7 +643,12 @@
       "content": {
         "type": "component",
         "name": "FloraAppView"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet",
+        "mobile"
+      ]
     },
     {
       "id": "contact_folder",
@@ -644,12 +657,14 @@
       "folder": null,
       "width": 500,
       "height": 350,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": "folder",
       "order": 23,
       "visible": true,
-      "content": null
+      "content": null,
+      "dockBreakpoints": [
+        "mobile"
+      ]
     },
     {
       "id": "freeform",
@@ -658,7 +673,6 @@
       "folder": "contact_folder",
       "width": 800,
       "height": 600,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 24,
@@ -666,7 +680,11 @@
       "content": {
         "type": "component",
         "name": "NotesApp"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet"
+      ]
     },
     {
       "id": "spotify",
@@ -675,7 +693,6 @@
       "folder": "contact_folder",
       "width": 400,
       "height": 600,
-      "showInDock": true,
       "isFullScreen": false,
       "variant": null,
       "order": 25,
@@ -683,7 +700,11 @@
       "content": {
         "type": "component",
         "name": "SpotifyAppView"
-      }
+      },
+      "dockBreakpoints": [
+        "desktop",
+        "tablet"
+      ]
     },
     {
       "id": "system_settings",
@@ -692,7 +713,6 @@
       "folder": null,
       "width": 1000,
       "height": 700,
-      "showInDock": false,
       "isFullScreen": true,
       "variant": null,
       "order": 99,
@@ -700,7 +720,8 @@
       "content": {
         "type": "component",
         "name": "SystemSettingsAppView"
-      }
+      },
+      "dockBreakpoints": []
     }
   ]
 }

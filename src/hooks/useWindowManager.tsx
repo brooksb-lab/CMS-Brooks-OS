@@ -15,7 +15,7 @@ export type WindowState = {
   initialX?: string | number;
   initialY?: string | number;
   folder?: string | null;
-  showInDock?: boolean;
+  dockBreakpoints?: string[];
   trashed?: boolean;
   variant?: 'default' | 'folder';
   folderContents?: string[];

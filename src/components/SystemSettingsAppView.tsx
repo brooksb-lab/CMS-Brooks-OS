@@ -18,7 +18,8 @@ interface WindowData {
   folder: string | null;
   width: number | null;
   height: number | null;
-  showInDock: boolean;
+  dockBreakpoints?: string[];
+  showInSidebar?: boolean;
   trashed?: boolean;
   isFullScreen: boolean;
   variant: string | null;
@@ -445,7 +446,7 @@ export const SystemSettingsAppView: React.FC = () => {
       folder: 'desktop',
       width: type === 'folder' ? 500 : 800,
       height: type === 'folder' ? 350 : 600,
-      showInDock: false,
+      dockBreakpoints: [],
       isFullScreen: false,
       variant: type === 'folder' ? 'folder' : null,
       order: windowsList.length + 1,
@@ -603,6 +604,25 @@ export const SystemSettingsAppView: React.FC = () => {
     }
 
     if (target.type === 'group_root') {
+      if (target.groupId === 'DOCK') {
+        setWindowsList((prev) => {
+          const unTrashed = setTrashedRecursive(dragId, false, prev);
+          return unTrashed.map((w) => {
+            if (w.id === dragId) {
+              const bps =
+                w.dockBreakpoints && w.dockBreakpoints.length > 0
+                  ? w.dockBreakpoints
+                  : ['desktop', 'tablet', 'mobile'];
+              return { ...w, dockBreakpoints: bps };
+            }
+            return w;
+          });
+        });
+        setDockOrder((prev) => (prev.includes(dragId) ? prev : [...prev, dragId]));
+        setHasUnsavedChanges(true);
+        return;
+      }
+
       setWindowsList((prev) => {
         const unTrashed = setTrashedRecursive(dragId, false, prev);
         return unTrashed.map((w) => (w.id === dragId ? { ...w, folder: null } : w));
@@ -669,7 +689,9 @@ export const SystemSettingsAppView: React.FC = () => {
 
   // Helpers to get ordered lists per group
   const getOrderedDockEntries = (): WindowData[] => {
-    const dockWindows = visibleWindowsList.filter((w) => w.showInDock === true && !w.trashed);
+    const dockWindows = visibleWindowsList.filter(
+      (w) => (w.dockBreakpoints?.length ?? 0) > 0 && !w.trashed
+    );
     const map = new Map<string, WindowData>(dockWindows.map((w) => [w.id, w]));
 
     const result: WindowData[] = [];
@@ -710,7 +732,11 @@ export const SystemSettingsAppView: React.FC = () => {
 
   const getOrderedSystemEntries = (): WindowData[] => {
     return visibleWindowsList.filter(
-      (w) => !(w.showInDock || w.folder === 'desktop' || w.content?.type === 'blocks') && !w.trashed
+      (w) =>
+        (!w.dockBreakpoints || w.dockBreakpoints.length === 0) &&
+        w.folder === null &&
+        w.content?.type !== 'blocks' &&
+        !w.trashed
     );
   };
 
@@ -1019,6 +1045,40 @@ export const SystemSettingsAppView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 shrink-0 ml-1">
+            {groupId === 'DOCK' && entry.dockBreakpoints && entry.dockBreakpoints.length > 0 && (
+              <div className="flex items-center gap-0.5 font-mono text-[9px] mr-1">
+                <span
+                  className={`px-1 py-0.2 rounded ${
+                    entry.dockBreakpoints.includes('desktop')
+                      ? 'bg-blue-500/30 text-blue-300 font-semibold border border-blue-400/40'
+                      : 'bg-white/5 text-white/20'
+                  }`}
+                  title="Desktop"
+                >
+                  D
+                </span>
+                <span
+                  className={`px-1 py-0.2 rounded ${
+                    entry.dockBreakpoints.includes('tablet')
+                      ? 'bg-indigo-500/30 text-indigo-300 font-semibold border border-indigo-400/40'
+                      : 'bg-white/5 text-white/20'
+                  }`}
+                  title="Tablet"
+                >
+                  T
+                </span>
+                <span
+                  className={`px-1 py-0.2 rounded ${
+                    entry.dockBreakpoints.includes('mobile')
+                      ? 'bg-purple-500/30 text-purple-300 font-semibold border border-purple-400/40'
+                      : 'bg-white/5 text-white/20'
+                  }`}
+                  title="Mobile"
+                >
+                  M
+                </span>
+              </div>
+            )}
             <button
               type="button"
               onClick={(e) => handleToggleVisibility(entry.id, e)}
@@ -1351,7 +1411,6 @@ export const SystemSettingsAppView: React.FC = () => {
             </div>
 
             {renderGroupSection('DOCK', 'DOCK', getOrderedDockEntries())}
-            {renderGroupSection('DESKTOP', 'DESKTOP', getOrderedDesktopEntries())}
             {renderGroupSection('PROJECTS', 'PROJECTS', getOrderedProjectsEntries(), true)}
             {renderGroupSection('SYSTEM', 'SYSTEM', getOrderedSystemEntries())}
           </div>
@@ -1566,16 +1625,51 @@ export const SystemSettingsAppView: React.FC = () => {
                   resourceType="image"
                 />
 
+                {/* Dock Breakpoints 3-Segment Toggle */}
+                <div className="flex flex-col gap-1.5 pt-3 border-t border-white/10 mt-2">
+                  <span className="text-xs text-white/60 font-medium">Show in Dock</span>
+                  <div className="inline-flex rounded-md bg-black/40 p-1 border border-white/15 self-start gap-1">
+                    {(['desktop', 'tablet', 'mobile'] as const).map((bp) => {
+                      const bps: string[] = selectedEntry.dockBreakpoints || [];
+                      const isActive = bps.includes(bp);
+                      const label = bp.charAt(0).toUpperCase() + bp.slice(1);
+                      return (
+                        <button
+                          key={bp}
+                          type="button"
+                          onClick={() => {
+                            const newBps = isActive
+                              ? bps.filter((b) => b !== bp)
+                              : [...bps, bp];
+                            updateSelectedField('dockBreakpoints', newBps);
+                            if (newBps.length > 0 && !dockOrder.includes(selectedEntry.id)) {
+                              setDockOrder((prev) => [...prev, selectedEntry.id]);
+                            }
+                          }}
+                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                            isActive
+                              ? 'bg-blue-600 text-white shadow-sm'
+                              : 'text-white/60 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Checkbox Display Flags */}
-                <div className="flex flex-wrap items-center gap-6 pt-2 text-xs border-t border-white/10 mt-2">
+                <div className="flex flex-wrap items-center gap-6 pt-2 text-xs">
+
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={selectedEntry.showInDock}
-                      onChange={(e) => updateSelectedField('showInDock', e.target.checked)}
+                      checked={!!selectedEntry.showInSidebar}
+                      onChange={(e) => updateSelectedField('showInSidebar', e.target.checked)}
                       className="rounded bg-black/40 border-white/20 text-blue-600 focus:ring-0 cursor-pointer"
                     />
-                    <span className="text-white/80">Show in Dock</span>
+                    <span className="text-white/80">Show in Sidebar</span>
                   </label>
 
                   <label className="flex items-center gap-2 cursor-pointer">

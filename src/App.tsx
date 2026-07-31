@@ -12,7 +12,7 @@ import { FinderWindowView } from '@/src/components/FinderWindowView';
 import { cn } from '@/src/lib/utils';
 import windowsConfig from '@/src/data/windows.json';
 import { windowsRegistryData, resolveWindowComponent } from '@/src/data/windowLoader';
-import { DOCK_ORDER as DESKTOP_DOCK_ORDER, MOBILE_DOCK_ORDER } from '@/src/data/dockOrder';
+import { DOCK_ORDER } from '@/src/data/dockOrder';
 
 const siteConfig = (windowsConfig as any).site || {};
 const wallpaper = siteConfig.wallpaper || "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg";
@@ -552,7 +552,7 @@ const DesktopApp = () => {
         folder: entry.folder,
         initialX: initX,
         initialY: initY,
-        showInDock: entry.showInDock,
+        dockBreakpoints: entry.dockBreakpoints || [],
         trashed: entry.trashed,
         isFullScreen: entry.isFullScreen,
         width: entry.width ?? undefined,
@@ -571,12 +571,14 @@ const DesktopApp = () => {
   const appList = Object.values(windows) as WindowState[];
   const desktopApps = appList.filter(app => app.folder === 'desktop' && !app.trashed);
   
-  const currentDockOrder = isMobile ? MOBILE_DOCK_ORDER : DESKTOP_DOCK_ORDER;
-  const dockApps = currentDockOrder.map(id => windows[id]).filter(app => app && app.showInDock && !app.trashed);
+  const currentBreakpoint = device; // 'desktop' | 'tablet' | 'mobile'
+  const dockApps = DOCK_ORDER.map(id => windows[id]).filter(app => 
+    app && app.dockBreakpoints && app.dockBreakpoints.includes(currentBreakpoint) && !app.trashed
+  );
   
-  // Add any other open apps that aren't in the fixed dock
+  // Add any other open apps that aren't in the fixed dock for current breakpoint
   const otherOpenApps = appList.filter(app => 
-    (app.isOpen || app.isMinimized) && !currentDockOrder.includes(app.id)
+    (app.isOpen || app.isMinimized) && !dockApps.some(da => da.id === app.id)
   );
 
   const [time, setTime] = useState(new Date());

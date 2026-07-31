@@ -29,7 +29,7 @@ export interface WindowDataEntry {
   folder: string | null;
   width: number | null;
   height: number | null;
-  showInDock?: boolean;
+  dockBreakpoints?: string[];
   trashed?: boolean;
   isFullScreen?: boolean;
   variant?: 'default' | 'folder' | string | null;

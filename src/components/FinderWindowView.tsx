@@ -4,11 +4,9 @@ import { DesktopFolderView, FolderItem } from './DesktopFolderView';
 import { Monitor, LayoutGrid, Film, Shirt, HardDrive, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export type FinderPath = 'Desktop' | 'Applications' | 'Film' | 'Apparel' | 'Archive' | 'Trash';
+export type FinderPath = string;
 
-export type FinderLocation =
-  | { type: 'sidebar'; path: FinderPath }
-  | { type: 'folder'; id: string; title: string };
+export type FinderLocation = { path: string; title: string };
 
 interface FinderWindowViewProps {
   initialPath?: string;
@@ -30,7 +28,11 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
 }) => {
   const { windows, toggleWindow } = useWindowManager();
 
-  const isFinderWindow = initialPath === 'Archive' || initialPath === 'Trash';
+  const isFinderWindow =
+    initialPath === 'Archive' ||
+    initialPath === 'macintosh_hd' ||
+    initialPath === 'Trash' ||
+    initialPath === 'trash';
   const hasSidebar = propHasSidebar !== undefined ? propHasSidebar : isFinderWindow;
 
   const [sidebarWidth, setSidebarWidth] = useState(200);
@@ -40,27 +42,30 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
 
   // Initial location
   const initialLoc: FinderLocation = useMemo(() => {
-    if (['Desktop', 'Applications', 'Film', 'Apparel', 'Archive', 'Trash'].includes(initialPath)) {
-      return { type: 'sidebar', path: initialPath as FinderPath };
+    let title = initialPath;
+    if (windows[initialPath]?.title) {
+      title = windows[initialPath].title;
+    } else if (initialPath === 'Desktop' || initialPath === 'desktop') {
+      title = 'Desktop';
+    } else if (initialPath === 'Applications') {
+      title = 'Applications';
+    } else if (initialPath === 'Archive' || initialPath === 'macintosh_hd') {
+      title = 'Archive';
+    } else if (initialPath === 'Trash' || initialPath === 'trash') {
+      title = 'Trash';
     }
-    const app = windows[initialPath];
-    return { type: 'folder', id: initialPath, title: app?.title || initialPath };
+    return { path: initialPath, title };
   }, [initialPath, windows]);
 
   // Navigation History Stack
   const [history, setHistory] = useState<FinderLocation[]>([initialLoc]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [activeSidebarPath, setActiveSidebarPath] = useState<FinderPath>(
-    initialLoc.type === 'sidebar' ? initialLoc.path : (initialPath === 'Trash' ? 'Trash' : 'Archive')
-  );
+  const [activeSidebarPath, setActiveSidebarPath] = useState<string>(initialLoc.path);
 
   const currentLoc = history[currentIndex] || initialLoc;
 
   // Title calculation
   const currentTitle = useMemo(() => {
-    if (currentLoc.type === 'sidebar') {
-      return currentLoc.path;
-    }
     return currentLoc.title;
   }, [currentLoc]);
 
@@ -120,114 +125,77 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
   };
 
   // Sidebar Row Click
-  const handleSidebarClick = (path: FinderPath) => {
-    if (activeSidebarPath === path && currentLoc.type === 'folder') {
-      // Returning to pane root
-      navigateTo({ type: 'sidebar', path });
-    } else {
-      setActiveSidebarPath(path);
-      navigateTo({ type: 'sidebar', path });
+  const handleSidebarClick = (path: string) => {
+    let title = path;
+    if (windows[path]?.title) {
+      title = windows[path].title;
+    } else if (path === 'Desktop' || path === 'desktop') {
+      title = 'Desktop';
+    } else if (path === 'Applications') {
+      title = 'Applications';
+    } else if (path === 'Archive' || path === 'macintosh_hd') {
+      title = 'Archive';
+    } else if (path === 'Trash' || path === 'trash') {
+      title = 'Trash';
     }
+    setActiveSidebarPath(path);
+    navigateTo({ path, title });
   };
 
   // Dynamic Content Items for current location
   const displayItems = useMemo<FolderItem[]>(() => {
-    if (currentLoc.type === 'sidebar') {
-      switch (currentLoc.path) {
-        case 'Desktop': {
-          const ids = windows['desktop']?.folderContents || [];
-          if (ids.length > 0) {
-            return ids
-              .filter((id: string) => windows[id] && !windows[id]?.trashed)
-              .map((id: string) => ({
-                id,
-                title: windows[id]?.title || id,
-                icon: windows[id]?.icon,
-                variant: windows[id]?.variant,
-                folderContents: windows[id]?.folderContents,
-              }));
-          }
-          return Object.values(windows)
-            .filter((app: any) => app.folder === 'desktop' && !app.trashed)
-            .map((app: any) => ({
-              id: app.id,
-              title: app.title,
-              icon: app.icon,
-              variant: app.variant,
-              folderContents: app.folderContents,
-            }));
-        }
+    const p = currentLoc.path;
 
-        case 'Applications':
-          return DOCK_ORDER
-            .map((id) => windows[id])
-            .filter((app: any) => app && app.showInDock !== false && !app.trashed)
-            .map((app: any) => ({
-              id: app.id,
-              title: app.title,
-              icon: app.icon,
-              variant: app.variant,
-              folderContents: app.folderContents,
-            }));
+    if (p === 'Applications') {
+      const dockSet = new Set(DOCK_ORDER);
+      const orderedApps = DOCK_ORDER
+        .map((id) => windows[id])
+        .filter((app: any) => app && app.dockBreakpoints && app.dockBreakpoints.length > 0 && !app.trashed);
+      const otherApps = Object.values(windows)
+        .filter((app: any) => app && !dockSet.has(app.id) && app.dockBreakpoints && app.dockBreakpoints.length > 0 && !app.trashed);
+      return [...orderedApps, ...otherApps].map((app: any) => ({
+        id: app.id,
+        title: app.title,
+        icon: app.icon,
+        variant: app.variant,
+        folderContents: app.folderContents,
+      }));
+    }
 
-        case 'Film': {
-          const ids = windows['film']?.folderContents || [];
-          return ids
-            .filter((id: string) => !windows[id]?.trashed)
-            .map((id: string) => ({
-              id,
-              title: windows[id]?.title || id,
-              icon: windows[id]?.icon,
-              variant: windows[id]?.variant,
-              folderContents: windows[id]?.folderContents,
-            }));
-        }
+    if (p === 'Archive' || p === 'macintosh_hd') {
+      return [
+        { id: 'Applications', title: 'Applications', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
+        { id: 'Library', title: 'Library', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
+        { id: 'System', title: 'System', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
+        { id: 'Users', title: 'Users', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
+        ...(windows['resume'] && !windows['resume'].trashed
+          ? [
+              {
+                id: 'resume',
+                title: windows['resume'].title,
+                icon: windows['resume'].icon,
+              },
+            ]
+          : []),
+      ];
+    }
 
-        case 'Apparel': {
-          const ids = windows['apparel']?.folderContents || [];
-          return ids
-            .filter((id: string) => !windows[id]?.trashed)
-            .map((id: string) => ({
-              id,
-              title: windows[id]?.title || id,
-              icon: windows[id]?.icon,
-              variant: windows[id]?.variant,
-              folderContents: windows[id]?.folderContents,
-            }));
-        }
+    if (p === 'Trash' || p === 'trash') {
+      return Object.values(windows)
+        .filter((app: any) => app.trashed === true)
+        .map((app: any) => ({
+          id: app.id,
+          title: app.title,
+          icon: app.icon || GENERIC_DOC_ICON,
+          variant: app.variant,
+          folderContents: app.folderContents,
+        }));
+    }
 
-        case 'Archive':
-          return [
-            { id: 'Applications', title: 'Applications', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-            { id: 'Library', title: 'Library', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-            { id: 'System', title: 'System', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-            { id: 'Users', title: 'Users', icon: GENERIC_FOLDER_ICON, variant: 'folder' },
-            ...(windows['resume'] && !windows['resume'].trashed
-              ? [
-                  {
-                    id: 'resume',
-                    title: windows['resume'].title,
-                    icon: windows['resume'].icon,
-                  },
-                ]
-              : []),
-          ];
-
-        case 'Trash':
-          return Object.values(windows)
-            .filter((app: any) => app.trashed === true)
-            .map((app: any) => ({
-              id: app.id,
-              title: app.title,
-              icon: app.icon || GENERIC_DOC_ICON,
-              variant: app.variant,
-              folderContents: app.folderContents,
-            }));
-      }
-    } else {
-      // Folder location
-      const app = windows[currentLoc.id];
-      if (app && app.folderContents && app.folderContents.length > 0) {
+    const folderId = (p === 'Desktop' || p === 'desktop') ? 'desktop' : p;
+    const app = windows[folderId];
+    if (app || folderId === 'desktop') {
+      if (app && Array.isArray(app.folderContents) && app.folderContents.length > 0) {
         return app.folderContents
           .filter((id: string) => windows[id] && !windows[id]?.trashed)
           .map((id: string) => ({
@@ -239,33 +207,28 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
           }));
       }
       return Object.values(windows)
-        .filter((app: any) => app.folder === currentLoc.id && !app.trashed)
-        .map((app: any) => ({
-          id: app.id,
-          title: app.title,
-          icon: app.icon,
-          variant: app.variant,
-          folderContents: app.folderContents,
+        .filter((entry: any) => entry && entry.folder === folderId && !entry.trashed)
+        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+        .map((entry: any) => ({
+          id: entry.id,
+          title: entry.title || entry.id,
+          icon: entry.icon,
+          variant: entry.variant,
+          folderContents: entry.folderContents,
         }));
     }
+
+    return [];
   }, [currentLoc, windows]);
 
   // Open item action (double click)
   const handleOpenItem = (item: FolderItem, rect?: { top: number; left: number; width: number; height: number }) => {
-    // If double clicked a built-in category
-    if (['Desktop', 'Applications', 'Film', 'Apparel', 'Archive', 'Trash'].includes(item.id)) {
-      handleSidebarClick(item.id as FinderPath);
-      return;
-    }
-
     const app = windows[item.id];
     const isFolder = item.variant === 'folder' || Boolean(item.folderContents) || app?.variant === 'folder';
 
     if (isFolder) {
-      // Navigate in place inside current window!
-      navigateTo({ type: 'folder', id: item.id, title: item.title });
+      navigateTo({ path: item.id, title: item.title });
     } else if (app) {
-      // File or app icon opens registered window!
       toggleWindow(item.id, rect);
     } else if (item.action) {
       item.action(rect);
