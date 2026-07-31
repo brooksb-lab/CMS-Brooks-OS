@@ -5,12 +5,13 @@
   },
   "dockOrder": [
     "clo",
-    "photoshop",
     "flora_ai",
+    "photoshop",
     "mail",
     "brooks_chat",
     "freeform",
-    "spotify"
+    "spotify",
+    "contact_folder"
   ],
   "mobileDockOrder": [
     "clo",
