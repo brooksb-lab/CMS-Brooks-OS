@@ -84,7 +84,17 @@ const useDeviceType = () => {
   return { device, override, setOverride };
 };
 
-const FolderContent = ({ appId, appIds, windows, toggleWindow, isTouchUI, closeFolder, isMobile }: any) => {
+interface FolderContentProps {
+  appId: string;
+  appIds?: string[];
+  windows: any;
+  toggleWindow: any;
+  isTouchUI?: boolean;
+  closeFolder?: () => void;
+  isMobile?: boolean;
+}
+
+const FolderContent = ({ appId, appIds = [], windows, toggleWindow, isTouchUI, closeFolder, isMobile }: FolderContentProps) => {
   if (!isTouchUI && !isMobile) {
     return (
       <FinderWindowView 
@@ -1082,6 +1092,7 @@ const DesktopApp = () => {
               >
                 {app.variant === 'folder' && app.folderContents ? (
                   <FolderContent 
+                    appId={app.id}
                     appIds={app.folderContents} 
                     windows={windows} 
                     toggleWindow={toggleWindow} 

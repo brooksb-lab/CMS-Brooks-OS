@@ -21,7 +21,7 @@ const GENERIC_DOC_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/
 import { DOCK_ORDER } from '../data/dockOrder';
 
 export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
-  initialPath = 'Archive',
+  initialPath,
   hasSidebar: propHasSidebar,
   onTitleChange,
   onNavStateChange,
@@ -42,19 +42,20 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
 
   // Initial location
   const initialLoc: FinderLocation = useMemo(() => {
-    let title = initialPath;
-    if (windows[initialPath]?.title) {
-      title = windows[initialPath].title;
-    } else if (initialPath === 'Desktop' || initialPath === 'desktop') {
+    const path = initialPath || '';
+    let title = path;
+    if (path && windows[path]?.title) {
+      title = windows[path].title;
+    } else if (path === 'Desktop' || path === 'desktop') {
       title = 'Desktop';
-    } else if (initialPath === 'Applications') {
+    } else if (path === 'Applications') {
       title = 'Applications';
-    } else if (initialPath === 'Archive' || initialPath === 'macintosh_hd') {
+    } else if (path === 'Archive' || path === 'macintosh_hd') {
       title = 'Archive';
-    } else if (initialPath === 'Trash' || initialPath === 'trash') {
+    } else if (path === 'Trash' || path === 'trash') {
       title = 'Trash';
     }
-    return { path: initialPath, title };
+    return { path, title };
   }, [initialPath, windows]);
 
   // Navigation History Stack
@@ -145,6 +146,10 @@ export const FinderWindowView: React.FC<FinderWindowViewProps> = ({
   // Dynamic Content Items for current location
   const displayItems = useMemo<FolderItem[]>(() => {
     const p = currentLoc.path;
+
+    if (!p) {
+      return [];
+    }
 
     if (p === 'Applications') {
       const dockSet = new Set(DOCK_ORDER);
