@@ -332,6 +332,7 @@ const DesktopApp = () => {
       { id: 'apparel', base: { x: 75, y: 38 }, jitter: 0 }, // APPAREL
       { id: 'on_no', base: { x: 20, y: 56 }, jitter: 0 }, // ON:NO
       { id: 'resume', base: { x: 65, y: 68 }, jitter: 0 }, // RESUME
+      { id: 'system_settings', base: { x: 20, y: 82 }, jitter: 0 }, // System Settings
     ];
 
     const tabletConfigs = [
@@ -579,7 +580,10 @@ const DesktopApp = () => {
   }, [registerWindow]);
 
   const appList = Object.values(windows) as WindowState[];
-  const desktopApps = appList.filter(app => app.folder === 'desktop' && !app.trashed);
+  const desktopApps = [
+    ...appList.filter(app => app.folder === 'desktop' && !app.trashed),
+    ...(isMobile && windows['system_settings'] && !windows['system_settings'].trashed ? [windows['system_settings']] : [])
+  ];
   
   const currentBreakpoint = device; // 'desktop' | 'tablet' | 'mobile'
   const dockApps = DOCK_ORDER.map(id => windows[id]).filter(app => 
