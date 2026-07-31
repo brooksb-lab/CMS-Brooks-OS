@@ -1,4 +1,8 @@
 {
+  "site": {
+    "wallpaper": "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
+    "menuBarTitle": "Brooks"
+  },
   "dockOrder": [
     "clo",
     "photoshop",

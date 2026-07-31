@@ -81,8 +81,21 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    // Replace ONLY the windows array, keeping all other top-level keys untouched
+    // Replace ONLY the windows array and top-level site/orders if provided, keeping all other top-level keys untouched
     existingJson.windows = windowsArray;
+
+    if (req.body.site) {
+      existingJson.site = req.body.site;
+    }
+    if (req.body.dockOrder) {
+      existingJson.dockOrder = req.body.dockOrder;
+    }
+    if (req.body.mobileDockOrder) {
+      existingJson.mobileDockOrder = req.body.mobileDockOrder;
+    }
+    if (req.body.desktopOrder) {
+      existingJson.desktopOrder = req.body.desktopOrder;
+    }
 
     const formattedJson = JSON.stringify(existingJson, null, 2);
 

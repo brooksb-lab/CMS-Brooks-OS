@@ -10,8 +10,13 @@ import { DesktopFolderView } from '@/src/components/DesktopFolderView';
 import { TopMenuBar } from '@/src/components/TopMenuBar';
 import { FinderWindowView } from '@/src/components/FinderWindowView';
 import { cn } from '@/src/lib/utils';
+import windowsConfig from '@/src/data/windows.json';
 import { windowsRegistryData, resolveWindowComponent } from '@/src/data/windowLoader';
 import { DOCK_ORDER as DESKTOP_DOCK_ORDER, MOBILE_DOCK_ORDER } from '@/src/data/dockOrder';
+
+const siteConfig = (windowsConfig as any).site || {};
+const wallpaper = siteConfig.wallpaper || "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg";
+const defaultMenuBarTitle = siteConfig.menuBarTitle || "Brooks";
 
 const ICONS = {
   photoshop: "https://res.cloudinary.com/dezas8twg/image/upload/v1778400134/BrooksOS_0013_Surface_hxvcao.png",
@@ -700,7 +705,7 @@ const DesktopApp = () => {
 
       {/* Background */}
       <img
-        src="https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg"
+        src={wallpaper}
         alt="Desktop Background"
         draggable={false}
         className="absolute inset-0 z-0 w-full h-full object-cover scale-110 pointer-events-none"
@@ -753,8 +758,8 @@ const DesktopApp = () => {
         <TopMenuBar 
           activeAppName={
           activeWindowId && windows[activeWindowId] 
-            ? (windows[activeWindowId].variant === 'folder' || activeWindowId === 'macintosh_hd' ? 'Brooks' : windows[activeWindowId].title)
-            : 'Brooks'
+            ? (windows[activeWindowId].variant === 'folder' || activeWindowId === 'macintosh_hd' ? defaultMenuBarTitle : windows[activeWindowId].title)
+            : defaultMenuBarTitle
           } 
           isFullScreen={isAnyWindowMaximized}
           onOpenWindow={openWindow}

@@ -3,7 +3,7 @@ import windowsConfig from '../data/windows.json';
 import {
   Lock, Eye, EyeOff, Trash2, Plus, ChevronDown,
   Folder, Layers, Shield, GripVertical, FileText, UploadCloud,
-  Check, AlertCircle, Loader2, RefreshCw, MoveUpRight, RotateCcw
+  Check, AlertCircle, Loader2, RefreshCw, MoveUpRight, RotateCcw, Palette
 } from 'lucide-react';
 
 interface Block {
@@ -195,6 +195,12 @@ const CloudinaryUploadField: React.FC<CloudinaryUploadFieldProps> = ({
         )}
       </div>
 
+      {value && resourceType === 'image' && (
+        <div className="relative w-28 h-20 rounded-md overflow-hidden border border-white/20 bg-black/40 mt-2">
+          <img src={value} alt="Preview" className="w-full h-full object-cover" />
+        </div>
+      )}
+
       {uploadError && (
         <div className="flex items-start gap-1.5 text-red-400 text-[11px] bg-red-500/10 border border-red-500/20 p-2 rounded">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -262,6 +268,19 @@ export const SystemSettingsAppView: React.FC = () => {
     return [...(((windowsConfig as any).desktopOrder || []) as string[])];
   });
 
+  // Site Settings State
+  const [site, setSite] = useState<{ wallpaper: string; menuBarTitle: string }>(() => {
+    const defaultSite = {
+      wallpaper: "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
+      menuBarTitle: "Brooks",
+    };
+    const configSite = (windowsConfig as any).site || {};
+    return {
+      wallpaper: configSite.wallpaper !== undefined ? configSite.wallpaper : defaultSite.wallpaper,
+      menuBarTitle: configSite.menuBarTitle !== undefined ? configSite.menuBarTitle : defaultSite.menuBarTitle,
+    };
+  });
+
   // Selected Window ID
   const [selectedId, setSelectedId] = useState<string | null>(() => {
     const visible = windowsConfig.windows.filter((w) => w.id !== 'system_settings');
@@ -270,6 +289,7 @@ export const SystemSettingsAppView: React.FC = () => {
 
   // Group collapse state
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
+    SITE: false,
     DOCK: false,
     DESKTOP: false,
     PROJECTS: false,
@@ -365,7 +385,8 @@ export const SystemSettingsAppView: React.FC = () => {
           windowsData: windowsList,
           dockOrder,
           desktopOrder,
-          changedEntryTitle: activeItem?.title || 'System Settings',
+          site,
+          changedEntryTitle: selectedId === 'site_appearance' ? 'Site Appearance' : activeItem?.title || 'System Settings',
         }),
       });
 
@@ -1293,6 +1314,39 @@ export const SystemSettingsAppView: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-4">
+            {/* SITE GROUP */}
+            <div className="space-y-1">
+              <div
+                onClick={() => toggleGroupCollapse('SITE')}
+                className="flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer text-[11px] font-semibold tracking-wider uppercase transition-colors select-none text-white/60 hover:text-white hover:bg-white/5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${collapsedGroups.SITE ? '-rotate-90' : ''}`}
+                  />
+                  <span>SITE (1)</span>
+                </div>
+              </div>
+
+              {!collapsedGroups.SITE && (
+                <div className="pl-1 space-y-1">
+                  <div
+                    onClick={() => requestSelectEntry('site_appearance')}
+                    className={`group relative flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-all border ${
+                      selectedId === 'site_appearance'
+                        ? 'bg-blue-600/20 border-blue-500/40 text-white'
+                        : 'bg-white/5 hover:bg-white/10 border-transparent text-white/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Palette className="w-4 h-4 text-purple-400 shrink-0" />
+                      <span className="text-xs font-medium truncate">Appearance</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {renderGroupSection('DOCK', 'DOCK', getOrderedDockEntries())}
             {renderGroupSection('DESKTOP', 'DESKTOP', getOrderedDesktopEntries())}
             {renderGroupSection('PROJECTS', 'PROJECTS', getOrderedProjectsEntries(), true)}
@@ -1349,7 +1403,54 @@ export const SystemSettingsAppView: React.FC = () => {
             </div>
           )}
 
-          {selectedEntry ? (
+          {selectedId === 'site_appearance' ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    Appearance Settings
+                    <span className="text-xs font-mono text-white/40">(site)</span>
+                  </h2>
+                  <p className="text-xs text-white/50">Global system wallpaper and menu bar title</p>
+                </div>
+              </div>
+
+              <div className="bg-[#1c1c20] border border-white/10 rounded-xl p-5 space-y-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-white/60">
+                  Global System Appearance
+                </h3>
+
+                <CloudinaryUploadField
+                  label="Wallpaper Image URL / File Upload"
+                  value={site.wallpaper}
+                  onChange={(url) => {
+                    setSite((prev) => ({ ...prev, wallpaper: url }));
+                    setHasUnsavedChanges(true);
+                  }}
+                  placeholder="Paste background image URL or drag file..."
+                  accept="image/*"
+                  resourceType="image"
+                />
+
+                <div className="space-y-1 text-xs pt-2 border-t border-white/10">
+                  <label className="block text-white/60 mb-1">Menu Bar Title</label>
+                  <input
+                    type="text"
+                    value={site.menuBarTitle}
+                    onChange={(e) => {
+                      setSite((prev) => ({ ...prev, menuBarTitle: e.target.value }));
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Brooks"
+                    className="w-full px-3 py-2 bg-black/40 border border-white/15 rounded-md text-white focus:outline-none focus:border-blue-500 font-medium"
+                  />
+                  <p className="text-[11px] text-white/40 mt-1">
+                    Default name shown in the top menu bar when Finder or active system window is focused.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : selectedEntry ? (
             <>
               {/* Header Info */}
               <div className="flex items-center justify-between pb-4 border-b border-white/10">
