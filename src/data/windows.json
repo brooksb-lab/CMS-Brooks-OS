@@ -2,82 +2,82 @@
   "site": {
     "wallpaper": "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
     "menuBarTitle": "Brooks",
-    "wallpaperMode": "static",
+    "wallpaperMode": "dynamic",
     "wallpaperOverride": "",
-    "wallpaperTestMode": false,
+    "wallpaperTestMode": true,
     "wallpaperTestInterval": 1,
     "wallpaperFrames": [
       {
         "id": "night",
         "label": "Night",
         "time": "00:00",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601064/s4r2qwtjzjrha1uhxguz.png"
       },
       {
         "id": "astronomical_dawn",
         "label": "Astronomical Dawn",
         "time": "04:30",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601070/nco4ati06naxoehf1q1g.png"
       },
       {
         "id": "blue_hour_dawn",
         "label": "Blue Hour Dawn",
         "time": "05:30",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601078/rrryt2woqurcbfhveduo.png"
       },
       {
         "id": "sunrise",
         "label": "Sunrise",
         "time": "06:15",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601088/osu5pvsggez2zpxldno1.png"
       },
       {
         "id": "golden_morning",
         "label": "Golden Morning",
         "time": "07:00",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601095/uqcrruduymhoe6kbhwnd.png"
       },
       {
         "id": "morning",
         "label": "Morning",
         "time": "09:00",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601112/m1yptrtlpfpdvyweufh5.png"
       },
       {
         "id": "noon",
         "label": "Noon",
         "time": "12:30",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601123/fagdjktsypireb9mamsh.png"
       },
       {
         "id": "afternoon",
         "label": "Afternoon",
         "time": "15:30",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601129/fhn3ivj388ulbbhg8k1o.png"
       },
       {
         "id": "golden_evening",
         "label": "Golden Evening",
         "time": "18:00",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601135/wd5i1pclfpu7pdmznicf.png"
       },
       {
         "id": "sunset",
         "label": "Sunset",
         "time": "19:00",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601141/tdbl9wrsarnnh4brjxwg.png"
       },
       {
         "id": "blue_hour_dusk",
         "label": "Blue Hour Dusk",
         "time": "19:45",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601148/vlnpn1wpv68kfunxezdq.png"
       },
       {
         "id": "astronomical_dusk",
         "label": "Astronomical Dusk",
         "time": "20:45",
-        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
+        "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785601154/knkswdofh0zpgpzduvls.png"
       }
     ]
   },
