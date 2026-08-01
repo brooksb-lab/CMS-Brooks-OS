@@ -10,85 +10,73 @@
       {
         "id": "night",
         "label": "Night",
-        "elevation": -90,
-        "phase": "any",
+        "time": "00:00",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "astronomical_dawn",
         "label": "Astronomical Dawn",
-        "elevation": -15,
-        "phase": "rising",
+        "time": "04:30",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "blue_hour_dawn",
         "label": "Blue Hour Dawn",
-        "elevation": -6,
-        "phase": "rising",
+        "time": "05:30",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "sunrise",
         "label": "Sunrise",
-        "elevation": 0,
-        "phase": "rising",
+        "time": "06:15",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "golden_morning",
         "label": "Golden Morning",
-        "elevation": 8,
-        "phase": "rising",
+        "time": "07:00",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "morning",
         "label": "Morning",
-        "elevation": 25,
-        "phase": "rising",
+        "time": "09:00",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "noon",
         "label": "Noon",
-        "elevation": 55,
-        "phase": "any",
+        "time": "12:30",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "afternoon",
         "label": "Afternoon",
-        "elevation": 25,
-        "phase": "falling",
+        "time": "15:30",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "golden_evening",
         "label": "Golden Evening",
-        "elevation": 8,
-        "phase": "falling",
+        "time": "18:00",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "sunset",
         "label": "Sunset",
-        "elevation": 0,
-        "phase": "falling",
+        "time": "19:00",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "blue_hour_dusk",
         "label": "Blue Hour Dusk",
-        "elevation": -6,
-        "phase": "falling",
+        "time": "19:45",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       },
       {
         "id": "astronomical_dusk",
         "label": "Astronomical Dusk",
-        "elevation": -15,
-        "phase": "falling",
+        "time": "20:45",
         "url": "https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png"
       }
     ]

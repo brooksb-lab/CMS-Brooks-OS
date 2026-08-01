@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import windowsConfig from '../data/windows.json';
 import { MobileSystemSettingsAppView } from './MobileSystemSettingsAppView';
-import {
-  getDerivedLocation,
-  calculateSolarPosition,
-  selectWallpaperFrames,
-} from '../lib/solar';
+import { WallpaperFrame, selectWallpaperFramesByTime } from '../lib/wallpaper';
 import {
   Lock, Eye, EyeOff, Trash2, Plus, ChevronDown,
   Folder, Layers, Shield, GripVertical, FileText, UploadCloud,
@@ -17,13 +13,7 @@ export interface Block {
   [key: string]: any;
 }
 
-export interface WallpaperFrame {
-  id: string;
-  label: string;
-  elevation: number;
-  phase: string;
-  url: string;
-}
+export type { WallpaperFrame };
 
 export interface SiteSettings {
   wallpaper: string;
@@ -36,18 +26,18 @@ export interface SiteSettings {
 }
 
 export const DEFAULT_WALLPAPER_FRAMES: WallpaperFrame[] = [
-  { id: 'night', label: 'Night', elevation: -90, phase: 'any', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'astronomical_dawn', label: 'Astronomical Dawn', elevation: -15, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'blue_hour_dawn', label: 'Blue Hour Dawn', elevation: -6, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'sunrise', label: 'Sunrise', elevation: 0, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'golden_morning', label: 'Golden Morning', elevation: 8, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'morning', label: 'Morning', elevation: 25, phase: 'rising', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'noon', label: 'Noon', elevation: 55, phase: 'any', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'afternoon', label: 'Afternoon', elevation: 25, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'golden_evening', label: 'Golden Evening', elevation: 8, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'sunset', label: 'Sunset', elevation: 0, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'blue_hour_dusk', label: 'Blue Hour Dusk', elevation: -6, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
-  { id: 'astronomical_dusk', label: 'Astronomical Dusk', elevation: -15, phase: 'falling', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'night', label: 'Night', time: '00:00', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'astronomical_dawn', label: 'Astronomical Dawn', time: '04:30', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'blue_hour_dawn', label: 'Blue Hour Dawn', time: '05:30', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'sunrise', label: 'Sunrise', time: '06:15', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'golden_morning', label: 'Golden Morning', time: '07:00', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'morning', label: 'Morning', time: '09:00', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'noon', label: 'Noon', time: '12:30', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'afternoon', label: 'Afternoon', time: '15:30', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'golden_evening', label: 'Golden Evening', time: '18:00', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'sunset', label: 'Sunset', time: '19:00', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'blue_hour_dusk', label: 'Blue Hour Dusk', time: '19:45', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
+  { id: 'astronomical_dusk', label: 'Astronomical Dusk', time: '20:45', url: 'https://res.cloudinary.com/dezas8twg/image/upload/v1785523999/ds5fhqqxdoxwd0dty3n5.png' },
 ];
 
 export interface WindowData {
@@ -1716,9 +1706,25 @@ export const SystemSettingsAppView: React.FC = () => {
                           >
                             <div className="flex items-center justify-between text-xs">
                               <span className="font-semibold text-white">{frame.label}</span>
-                              <span className="font-mono text-[11px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                                {frame.elevation}° solar elevation • phase: {frame.phase}
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-white/50 text-[11px]">Time:</span>
+                                <input
+                                  type="text"
+                                  value={frame.time || '00:00'}
+                                  onChange={(e) => {
+                                    const newTime = e.target.value;
+                                    setSite((prev) => ({
+                                      ...prev,
+                                      wallpaperFrames: (prev.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES).map((f) =>
+                                        f.id === frame.id ? { ...f, time: newTime } : f
+                                      ),
+                                    }));
+                                    setHasUnsavedChanges(true);
+                                  }}
+                                  placeholder="00:00"
+                                  className="w-16 px-2 py-0.5 bg-black/50 border border-white/15 rounded text-white font-mono text-[11px] focus:outline-none focus:border-blue-500 text-center"
+                                />
+                              </div>
                             </div>
 
                             <CloudinaryUploadField
@@ -1745,12 +1751,14 @@ export const SystemSettingsAppView: React.FC = () => {
 
                   {/* Read-only Monospace Readout */}
                   {(() => {
-                    const loc = getDerivedLocation();
-                    const solarPos = calculateSolarPosition(readoutNow, loc.latitude, loc.longitude);
-                    const sel = selectWallpaperFrames(
+                    const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+                    const hrs = String(readoutNow.getHours()).padStart(2, '0');
+                    const mins = String(readoutNow.getMinutes()).padStart(2, '0');
+                    const currentLocalTimeStr = `${hrs}:${mins}`;
+
+                    const sel = selectWallpaperFramesByTime(
                       site.wallpaperFrames || DEFAULT_WALLPAPER_FRAMES,
-                      solarPos.elevation,
-                      solarPos.phase
+                      readoutNow
                     );
 
                     let tier: 'static' | 'test' | 'override' | 'live' = 'static';
@@ -1790,15 +1798,13 @@ export const SystemSettingsAppView: React.FC = () => {
                     return (
                       <div className="mt-6 p-4 bg-black/60 border border-white/15 rounded-xl font-mono text-xs text-green-400 space-y-2 shadow-inner">
                         <div className="text-[10px] uppercase font-bold tracking-wider text-white/50 border-b border-white/10 pb-1.5 flex items-center justify-between">
-                          <span>Solar Positioning & Frame Readout</span>
+                          <span>Time & Frame Readout</span>
                           <span className="text-yellow-400 font-bold">{tier.toUpperCase()} TIER</span>
                         </div>
                         <div className="space-y-1 text-[11px] leading-relaxed">
                           <div><span className="text-white/40">Active Precedence Tier:</span> <span className="text-yellow-300 font-semibold">{tier}</span></div>
-                          <div><span className="text-white/40">Detected Timezone:</span> <span className="text-white">{loc.timezone}</span></div>
-                          <div><span className="text-white/40">Derived Lat / Lon:</span> <span className="text-white">{loc.latitude.toFixed(1)}°, {loc.longitude.toFixed(1)}°</span></div>
-                          <div><span className="text-white/40">Solar Elevation:</span> <span className="text-white font-bold">{solarPos.elevation.toFixed(1)}°</span></div>
-                          <div><span className="text-white/40">Current Phase:</span> <span className="text-white capitalize">{solarPos.phase}</span></div>
+                          <div><span className="text-white/40">Detected Timezone:</span> <span className="text-white">{tzName}</span></div>
+                          <div><span className="text-white/40">Current Local Time:</span> <span className="text-white font-bold">{currentLocalTimeStr}</span></div>
                           <div><span className="text-white/40">Active Frame Labels:</span> <span className="text-white font-medium">{lowerL} / {upperL}</span></div>
                           <div><span className="text-white/40">Blend Value:</span> <span className="text-white font-bold">{blendV}</span></div>
                         </div>

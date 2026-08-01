@@ -82,7 +82,7 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
   const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
   const [showNewMenu, setShowNewMenu] = useState(false);
 
-  // Touch Drag State
+  // Touch Drag State for Entry List
   const [activeTouchDrag, setActiveTouchDrag] = useState<{
     entry: WindowData;
     groupId: string;
@@ -99,8 +99,37 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
     position?: 'above' | 'below';
   } | null>(null);
 
+  // Touch Drag State for Block List in Editor
+  const [activeBlockDrag, setActiveBlockDrag] = useState<{
+    index: number;
+    block: Block;
+    startY: number;
+    currentY: number;
+    currentX: number;
+  } | null>(null);
+
+  const [blockDropTargetState, setBlockDropTargetState] = useState<{
+    targetIndex: number;
+    position: 'above' | 'below';
+  } | null>(null);
+
   const listContainerRef = useRef<HTMLDivElement>(null);
   const touchLongPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const touchPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const activeTouchDragRef = useRef(activeTouchDrag);
+  activeTouchDragRef.current = activeTouchDrag;
+
+  const activeBlockDragRef = useRef(activeBlockDrag);
+  activeBlockDragRef.current = activeBlockDrag;
+
+  const dropTargetStateRef = useRef(dropTargetState);
+  dropTargetStateRef.current = dropTargetState;
+
+  const blockDropTargetStateRef = useRef(blockDropTargetState);
+  blockDropTargetStateRef.current = blockDropTargetState;
 
   // Filter out system_settings
   const visibleWindowsList = useMemo(() => {
@@ -182,7 +211,224 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
     setMobileView('editor');
   };
 
-  // Touch Drag Logic
+  // Target element query function for current touch point
+  const updateDropTargetFromPoint = (x: number, y: number) => {
+    const dragEntry = activeTouchDragRef.current;
+    const dragBlock = activeBlockDragRef.current;
+
+    if (dragEntry) {
+      const el = document.elementFromPoint(x, y);
+      if (!el) {
+        setDropTargetState(null);
+        return;
+      }
+
+      const trashEl = el.closest('[data-trash-area]') as HTMLElement | null;
+      const rowEl = el.closest('[data-row-id]') as HTMLElement | null;
+      const groupEl = el.closest('[data-group-id]') as HTMLElement | null;
+
+      if (trashEl) {
+        setDropTargetState({ type: 'trash' });
+        return;
+      }
+
+      if (rowEl) {
+        const targetId = rowEl.getAttribute('data-row-id') || '';
+        const targetGroupId = rowEl.getAttribute('data-row-group') || '';
+        const isTargetFolder = rowEl.getAttribute('data-is-folder') === 'true';
+
+        if (targetId === dragEntry.entry.id) {
+          setDropTargetState(null);
+          return;
+        }
+
+        const rect = rowEl.getBoundingClientRect();
+        const offsetY = y - rect.top;
+        const height = rect.height;
+
+        if (isTargetFolder) {
+          if (offsetY < height * 0.25) {
+            setDropTargetState({
+              type: 'reorder',
+              groupId: targetGroupId,
+              targetId,
+              position: 'above',
+            });
+          } else if (offsetY > height * 0.75) {
+            setDropTargetState({
+              type: 'reorder',
+              groupId: targetGroupId,
+              targetId,
+              position: 'below',
+            });
+          } else {
+            setDropTargetState({
+              type: 'folder_nest',
+              groupId: targetGroupId,
+              targetId,
+            });
+          }
+        } else {
+          if (offsetY < height * 0.5) {
+            setDropTargetState({
+              type: 'reorder',
+              groupId: targetGroupId,
+              targetId,
+              position: 'above',
+            });
+          } else {
+            setDropTargetState({
+              type: 'reorder',
+              groupId: targetGroupId,
+              targetId,
+              position: 'below',
+            });
+          }
+        }
+        return;
+      }
+
+      if (groupEl) {
+        const gId = groupEl.getAttribute('data-group-id') || '';
+        setDropTargetState({ type: 'group_root', groupId: gId });
+        return;
+      }
+
+      setDropTargetState(null);
+    } else if (dragBlock) {
+      const el = document.elementFromPoint(x, y);
+      if (!el) {
+        setBlockDropTargetState(null);
+        return;
+      }
+
+      const blockEl = el.closest('[data-block-index]') as HTMLElement | null;
+      if (blockEl) {
+        const targetIndexStr = blockEl.getAttribute('data-block-index');
+        if (targetIndexStr !== null) {
+          const targetIndex = parseInt(targetIndexStr, 10);
+          if (targetIndex === dragBlock.index) {
+            setBlockDropTargetState(null);
+            return;
+          }
+
+          const rect = blockEl.getBoundingClientRect();
+          const offsetY = y - rect.top;
+          const height = rect.height;
+          const position = offsetY < height * 0.5 ? 'above' : 'below';
+
+          setBlockDropTargetState({
+            targetIndex,
+            position,
+          });
+          return;
+        }
+      }
+
+      setBlockDropTargetState(null);
+    }
+  };
+
+  // Lock scrolling during drag & track global touch position
+  useEffect(() => {
+    const isDragging = !!activeTouchDrag || !!activeBlockDrag;
+    if (!isDragging) return;
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        touchPosRef.current = { x: touch.clientX, y: touch.clientY };
+
+        if (activeTouchDragRef.current) {
+          setActiveTouchDrag((prev) =>
+            prev ? { ...prev, currentX: touch.clientX, currentY: touch.clientY } : null
+          );
+        } else if (activeBlockDragRef.current) {
+          setActiveBlockDrag((prev) =>
+            prev ? { ...prev, currentX: touch.clientX, currentY: touch.clientY } : null
+          );
+        }
+      }
+    };
+
+    const handleGlobalTouchEnd = () => {
+      if (activeTouchDragRef.current) {
+        handleTouchEndRow();
+      } else if (activeBlockDragRef.current) {
+        handleBlockTouchEnd();
+      }
+    };
+
+    window.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+    window.addEventListener('touchend', handleGlobalTouchEnd);
+    window.addEventListener('touchcancel', handleGlobalTouchEnd);
+
+    return () => {
+      window.removeEventListener('touchmove', handleGlobalTouchMove);
+      window.removeEventListener('touchend', handleGlobalTouchEnd);
+      window.removeEventListener('touchcancel', handleGlobalTouchEnd);
+    };
+  }, [activeTouchDrag !== null, activeBlockDrag !== null]);
+
+  // Continuous animation frame edge scroll loop with 120px dead zone
+  useEffect(() => {
+    const isDragging = !!activeTouchDrag || !!activeBlockDrag;
+    if (!isDragging) return;
+
+    let animFrameId: number;
+
+    const tick = () => {
+      const curX = touchPosRef.current.x;
+      const curY = touchPosRef.current.y;
+
+      const dragEntry = activeTouchDragRef.current;
+      const dragBlock = activeBlockDragRef.current;
+
+      const startY = dragEntry ? dragEntry.startY : dragBlock ? dragBlock.startY : 0;
+
+      if (dragEntry || dragBlock) {
+        const deltaY = curY - startY;
+        const DEAD_ZONE = 120;
+        const MAX_RAMP_DIST = 200;
+        const MAX_SPEED = 15;
+
+        let speed = 0;
+        if (deltaY > DEAD_ZONE) {
+          const excess = deltaY - DEAD_ZONE;
+          const t = Math.min(1, excess / MAX_RAMP_DIST);
+          speed = t * t * MAX_SPEED;
+        } else if (deltaY < -DEAD_ZONE) {
+          const excess = -deltaY - DEAD_ZONE;
+          const t = Math.min(1, excess / MAX_RAMP_DIST);
+          speed = -(t * t * MAX_SPEED);
+        }
+
+        if (speed !== 0 && listContainerRef.current) {
+          const el = listContainerRef.current;
+          const maxScroll = el.scrollHeight - el.clientHeight;
+          if (maxScroll > 0) {
+            const nextScrollTop = Math.max(0, Math.min(maxScroll, el.scrollTop + speed));
+            el.scrollTop = nextScrollTop;
+          }
+        }
+
+        updateDropTargetFromPoint(curX, curY);
+      }
+
+      animFrameId = requestAnimationFrame(tick);
+    };
+
+    animFrameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(animFrameId);
+    };
+  }, [activeTouchDrag !== null, activeBlockDrag !== null]);
+
+  // Touch Drag Logic for Entry List
   const handleTouchStartHandle = (
     e: React.TouchEvent,
     entry: WindowData,
@@ -190,6 +436,8 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
     isFolder: boolean
   ) => {
     const touch = e.touches[0];
+    touchPosRef.current = { x: touch.clientX, y: touch.clientY };
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     setActiveTouchDrag({
       entry,
       groupId,
@@ -198,6 +446,7 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
       currentY: touch.clientY,
       currentX: touch.clientX,
     });
+    if (navigator.vibrate) navigator.vibrate(20);
   };
 
   const handleTouchStartRow = (
@@ -206,10 +455,15 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
     groupId: string,
     isFolder: boolean
   ) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, a')) return;
+
     const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     if (touchLongPressTimerRef.current) clearTimeout(touchLongPressTimerRef.current);
 
     touchLongPressTimerRef.current = setTimeout(() => {
+      touchPosRef.current = { x: touch.clientX, y: touch.clientY };
       setActiveTouchDrag({
         entry,
         groupId,
@@ -223,113 +477,24 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
   };
 
   const handleTouchMoveRow = (e: React.TouchEvent) => {
-    if (!activeTouchDrag) {
-      // Cancel long press if finger moved significantly
-      if (touchLongPressTimerRef.current) {
-        clearTimeout(touchLongPressTimerRef.current);
-        touchLongPressTimerRef.current = null;
-      }
-      return;
-    }
-
-    e.preventDefault();
-    const touch = e.touches[0];
-    setActiveTouchDrag((prev) =>
-      prev ? { ...prev, currentY: touch.clientY, currentX: touch.clientX } : null
-    );
-
-    // Auto scroll list container if near top/bottom
-    if (listContainerRef.current) {
-      const rect = listContainerRef.current.getBoundingClientRect();
-      const topDist = touch.clientY - rect.top;
-      const bottomDist = rect.bottom - touch.clientY;
-
-      if (topDist < 60) {
-        listContainerRef.current.scrollTop -= 10;
-      } else if (bottomDist < 60) {
-        listContainerRef.current.scrollTop += 10;
-      }
-    }
-
-    // Find element under touch point
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!el) {
-      setDropTargetState(null);
-      return;
-    }
-
-    const rowEl = el.closest('[data-row-id]') as HTMLElement | null;
-    const groupEl = el.closest('[data-group-id]') as HTMLElement | null;
-    const trashEl = el.closest('[data-trash-area]') as HTMLElement | null;
-
-    if (trashEl) {
-      setDropTargetState({ type: 'trash' });
-      return;
-    }
-
-    if (rowEl) {
-      const targetId = rowEl.getAttribute('data-row-id') || '';
-      const targetGroupId = rowEl.getAttribute('data-row-group') || '';
-      const isTargetFolder = rowEl.getAttribute('data-is-folder') === 'true';
-
-      if (targetId === activeTouchDrag.entry.id) {
-        setDropTargetState(null);
-        return;
-      }
-
-      const rect = rowEl.getBoundingClientRect();
-      const offsetY = touch.clientY - rect.top;
-      const height = rect.height;
-
-      if (isTargetFolder) {
-        if (offsetY < height * 0.25) {
-          setDropTargetState({
-            type: 'reorder',
-            groupId: targetGroupId,
-            targetId,
-            position: 'above',
-          });
-        } else if (offsetY > height * 0.75) {
-          setDropTargetState({
-            type: 'reorder',
-            groupId: targetGroupId,
-            targetId,
-            position: 'below',
-          });
-        } else {
-          setDropTargetState({
-            type: 'folder_nest',
-            groupId: targetGroupId,
-            targetId,
-          });
-        }
-      } else {
-        if (offsetY < height * 0.5) {
-          setDropTargetState({
-            type: 'reorder',
-            groupId: targetGroupId,
-            targetId,
-            position: 'above',
-          });
-        } else {
-          setDropTargetState({
-            type: 'reorder',
-            groupId: targetGroupId,
-            targetId,
-            position: 'below',
-          });
+    if (!activeTouchDrag && !activeBlockDrag) {
+      if (touchLongPressTimerRef.current && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchStartPosRef.current.x;
+        const dy = touch.clientY - touchStartPosRef.current.y;
+        if (Math.hypot(dx, dy) > 10) {
+          clearTimeout(touchLongPressTimerRef.current);
+          touchLongPressTimerRef.current = null;
         }
       }
       return;
     }
 
-    if (groupEl) {
-      const gId = groupEl.getAttribute('data-group-id') || '';
-      setDropTargetState({ type: 'group_root', groupId: gId });
-      return;
+    if (e.cancelable) e.preventDefault();
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      touchPosRef.current = { x: touch.clientX, y: touch.clientY };
     }
-
-    setDropTargetState(null);
   };
 
   const handleTouchEndRow = () => {
@@ -338,25 +503,105 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
       touchLongPressTimerRef.current = null;
     }
 
-    if (!activeTouchDrag) return;
+    const dragEntry = activeTouchDragRef.current;
+    const targetState = dropTargetStateRef.current;
 
-    if (dropTargetState?.type === 'trash') {
-      handleDropAction({ type: 'trash' }, activeTouchDrag.entry.id);
-    } else if (dropTargetState?.type === 'folder_nest' && dropTargetState.targetId) {
-      handleDropAction({ type: 'folder', id: dropTargetState.targetId }, activeTouchDrag.entry.id);
-    } else if (dropTargetState?.type === 'reorder' && dropTargetState.targetId && dropTargetState.groupId) {
-      handleReorderInGroup(
-        activeTouchDrag.entry.id,
-        dropTargetState.targetId,
-        dropTargetState.position || 'above',
-        dropTargetState.groupId
-      );
-    } else if (dropTargetState?.type === 'group_root' && dropTargetState.groupId) {
-      handleDropAction({ type: 'group_root', groupId: dropTargetState.groupId }, activeTouchDrag.entry.id);
+    if (dragEntry && targetState) {
+      if (targetState.type === 'trash') {
+        handleDropAction({ type: 'trash' }, dragEntry.entry.id);
+      } else if (targetState.type === 'folder_nest' && targetState.targetId) {
+        handleDropAction({ type: 'folder', id: targetState.targetId }, dragEntry.entry.id);
+      } else if (targetState.type === 'reorder' && targetState.targetId && targetState.groupId) {
+        handleReorderInGroup(
+          dragEntry.entry.id,
+          targetState.targetId,
+          targetState.position || 'above',
+          targetState.groupId
+        );
+      } else if (targetState.type === 'group_root' && targetState.groupId) {
+        handleDropAction({ type: 'group_root', groupId: targetState.groupId }, dragEntry.entry.id);
+      }
     }
 
     setActiveTouchDrag(null);
     setDropTargetState(null);
+  };
+
+  // Touch Drag Logic for Block List in Editor
+  const handleBlockTouchStartHandle = (
+    e: React.TouchEvent,
+    index: number,
+    block: Block
+  ) => {
+    const touch = e.touches[0];
+    touchPosRef.current = { x: touch.clientX, y: touch.clientY };
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    setActiveBlockDrag({
+      index,
+      block,
+      startY: touch.clientY,
+      currentY: touch.clientY,
+      currentX: touch.clientX,
+    });
+    if (navigator.vibrate) navigator.vibrate(20);
+  };
+
+  const handleBlockTouchStartRow = (
+    e: React.TouchEvent,
+    index: number,
+    block: Block
+  ) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, textarea, select, a')) return;
+
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    if (touchLongPressTimerRef.current) clearTimeout(touchLongPressTimerRef.current);
+
+    touchLongPressTimerRef.current = setTimeout(() => {
+      touchPosRef.current = { x: touch.clientX, y: touch.clientY };
+      setActiveBlockDrag({
+        index,
+        block,
+        startY: touch.clientY,
+        currentY: touch.clientY,
+        currentX: touch.clientX,
+      });
+      if (navigator.vibrate) navigator.vibrate(40);
+    }, 280);
+  };
+
+  const handleBlockTouchEnd = () => {
+    if (touchLongPressTimerRef.current) {
+      clearTimeout(touchLongPressTimerRef.current);
+      touchLongPressTimerRef.current = null;
+    }
+
+    const dragBlock = activeBlockDragRef.current;
+    const targetState = blockDropTargetStateRef.current;
+
+    if (dragBlock && targetState && selectedEntry?.content?.blocks) {
+      const fromIndex = dragBlock.index;
+      const toIndex = targetState.targetIndex;
+      const position = targetState.position;
+
+      if (fromIndex !== toIndex) {
+        const blocks = [...selectedEntry.content.blocks];
+        const [moved] = blocks.splice(fromIndex, 1);
+        let insertIndex = toIndex;
+        if (fromIndex < toIndex) {
+          insertIndex = position === 'below' ? toIndex : toIndex - 1;
+        } else {
+          insertIndex = position === 'below' ? toIndex + 1 : toIndex;
+        }
+        insertIndex = Math.max(0, Math.min(blocks.length, insertIndex));
+        blocks.splice(insertIndex, 0, moved);
+        updateBlocks(blocks);
+      }
+    }
+
+    setActiveBlockDrag(null);
+    setBlockDropTargetState(null);
   };
 
   // Render a row item in the list
@@ -647,7 +892,9 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
       {/* BODY CONTENT AREA */}
       <div
         ref={listContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 touch-pan-y"
+        className={`flex-1 p-4 space-y-4 ${
+          activeTouchDrag || activeBlockDrag ? 'touch-none overflow-hidden' : 'touch-pan-y overflow-y-auto'
+        }`}
         style={{ paddingBottom: 'calc(3rem + env(safe-area-inset-bottom, 0px))' }}
       >
         {/* DELETE CONFIRMATION DIALOG / BANNER */}
@@ -1246,185 +1493,222 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
                             No content blocks added yet. Use &quot;Add Block&quot; above.
                           </div>
                         ) : (
-                          selectedEntry.content.blocks.map((block: Block, index: number) => (
-                            <div
-                              key={index}
-                              className="p-3 bg-black/30 border border-white/10 rounded-xl space-y-2 text-xs"
-                            >
-                              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                                <span className="font-bold text-blue-400 uppercase tracking-wide">
-                                  Block {index + 1}: {block.type}
-                                </span>
+                          selectedEntry.content.blocks.map((block: Block, index: number) => {
+                            const isBeingDragged = activeBlockDrag?.index === index;
+                            const isAboveTarget =
+                              blockDropTargetState?.targetIndex === index &&
+                              blockDropTargetState.position === 'above';
+                            const isBelowTarget =
+                              blockDropTargetState?.targetIndex === index &&
+                              blockDropTargetState.position === 'below';
 
-                                <div className="flex items-center gap-1">
-                                  {/* Move Up */}
-                                  <button
-                                    type="button"
-                                    disabled={index === 0}
-                                    onClick={() => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      const temp = newBlocks[index - 1];
-                                      newBlocks[index - 1] = newBlocks[index];
-                                      newBlocks[index] = temp;
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    className="p-1 rounded text-white/50 hover:text-white disabled:opacity-20 cursor-pointer"
-                                  >
-                                    <ArrowUp className="w-3.5 h-3.5" />
-                                  </button>
+                            return (
+                              <div key={index} className="relative select-none">
+                                {/* Insertion Line Above */}
+                                {isAboveTarget && (
+                                  <div className="h-1 bg-purple-500 rounded-full my-0.5 mx-2 shadow-sm animate-pulse" />
+                                )}
 
-                                  {/* Move Down */}
-                                  <button
-                                    type="button"
-                                    disabled={
-                                      index ===
-                                      (selectedEntry.content?.blocks?.length || 1) - 1
-                                    }
-                                    onClick={() => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      const temp = newBlocks[index + 1];
-                                      newBlocks[index + 1] = newBlocks[index];
-                                      newBlocks[index] = temp;
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    className="p-1 rounded text-white/50 hover:text-white disabled:opacity-20 cursor-pointer"
-                                  >
-                                    <ArrowDown className="w-3.5 h-3.5" />
-                                  </button>
+                                <div
+                                  data-block-index={index}
+                                  onTouchStart={(e) => handleBlockTouchStartRow(e, index, block)}
+                                  onTouchMove={handleTouchMoveRow}
+                                  onTouchEnd={handleBlockTouchEnd}
+                                  className={`p-3 border rounded-xl space-y-2 text-xs transition-all ${
+                                    isBeingDragged
+                                      ? 'opacity-40 border-purple-500/50 bg-purple-500/10'
+                                      : 'bg-black/30 border-white/10'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        onTouchStart={(e) => handleBlockTouchStartHandle(e, index, block)}
+                                        className="p-1.5 text-white/30 hover:text-white cursor-grab active:cursor-grabbing touch-none"
+                                      >
+                                        <GripVertical className="w-4 h-4" />
+                                      </div>
+                                      <span className="font-bold text-purple-400 uppercase tracking-wide">
+                                        Block {index + 1}: {block.type}
+                                      </span>
+                                    </div>
 
-                                  {/* Remove Block */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newBlocks = (
-                                        selectedEntry.content?.blocks || []
-                                      ).filter((_, i) => i !== index);
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    className="p-1 rounded text-red-400 hover:bg-red-500/20 cursor-pointer"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
+                                    <div className="flex items-center gap-1">
+                                      {/* Move Up */}
+                                      <button
+                                        type="button"
+                                        disabled={index === 0}
+                                        onClick={() => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          const temp = newBlocks[index - 1];
+                                          newBlocks[index - 1] = newBlocks[index];
+                                          newBlocks[index] = temp;
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        className="p-1 rounded text-white/50 hover:text-white disabled:opacity-20 cursor-pointer"
+                                      >
+                                        <ArrowUp className="w-3.5 h-3.5" />
+                                      </button>
+
+                                      {/* Move Down */}
+                                      <button
+                                        type="button"
+                                        disabled={
+                                          index ===
+                                          (selectedEntry.content?.blocks?.length || 1) - 1
+                                        }
+                                        onClick={() => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          const temp = newBlocks[index + 1];
+                                          newBlocks[index + 1] = newBlocks[index];
+                                          newBlocks[index] = temp;
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        className="p-1 rounded text-white/50 hover:text-white disabled:opacity-20 cursor-pointer"
+                                      >
+                                        <ArrowDown className="w-3.5 h-3.5" />
+                                      </button>
+
+                                      {/* Remove Block */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newBlocks = (
+                                            selectedEntry.content?.blocks || []
+                                          ).filter((_, i) => i !== index);
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        className="p-1 rounded text-red-400 hover:bg-red-500/20 cursor-pointer"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Text Block Fields */}
+                                  {block.type === 'text' && (
+                                    <div>
+                                      <label className="block text-white/50 mb-1">Text Content</label>
+                                      <textarea
+                                        value={block.value || ''}
+                                        onChange={(e) => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          newBlocks[index] = { ...newBlocks[index], value: e.target.value };
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        rows={3}
+                                        className="w-full p-2 bg-black/40 border border-white/15 rounded-lg text-white"
+                                      />
+                                    </div>
+                                  )}
+
+                                  {/* Image Block Fields */}
+                                  {block.type === 'image' && (
+                                    <CloudinaryUploadField
+                                      label="Image URL / Upload"
+                                      value={block.url || ''}
+                                      onChange={(url) => {
+                                        const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                        newBlocks[index] = { ...newBlocks[index], url };
+                                        updateBlocks(newBlocks);
+                                      }}
+                                      placeholder="Paste image URL..."
+                                      accept="image/*"
+                                      resourceType="image"
+                                    />
+                                  )}
+
+                                  {/* Image Pair Block Fields */}
+                                  {block.type === 'imagePair' && (
+                                    <div className="space-y-2">
+                                      <CloudinaryUploadField
+                                        label="First Image URL / Upload"
+                                        value={block.url1 || ''}
+                                        onChange={(url) => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          newBlocks[index] = { ...newBlocks[index], url1: url };
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        placeholder="First image URL..."
+                                        accept="image/*"
+                                        resourceType="image"
+                                      />
+                                      <CloudinaryUploadField
+                                        label="Second Image URL / Upload"
+                                        value={block.url2 || ''}
+                                        onChange={(url) => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          newBlocks[index] = { ...newBlocks[index], url2: url };
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        placeholder="Second image URL..."
+                                        accept="image/*"
+                                        resourceType="image"
+                                      />
+                                    </div>
+                                  )}
+
+                                  {/* Video Block Fields */}
+                                  {block.type === 'video' && (
+                                    <CloudinaryUploadField
+                                      label="Video URL / Upload"
+                                      value={block.url || ''}
+                                      onChange={(url) => {
+                                        const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                        newBlocks[index] = { ...newBlocks[index], url };
+                                        updateBlocks(newBlocks);
+                                      }}
+                                      placeholder="Paste video URL..."
+                                      accept="video/*"
+                                      resourceType="video"
+                                    />
+                                  )}
+
+                                  {/* Caption Block Fields */}
+                                  {block.type === 'caption' && (
+                                    <div>
+                                      <label className="block text-white/50 mb-1">Caption Text</label>
+                                      <input
+                                        type="text"
+                                        value={block.value || ''}
+                                        onChange={(e) => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          newBlocks[index] = { ...newBlocks[index], value: e.target.value };
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        className="w-full p-2 bg-black/40 border border-white/15 rounded-lg text-white"
+                                      />
+                                    </div>
+                                  )}
+
+                                  {/* Spacer Block Fields */}
+                                  {block.type === 'spacer' && (
+                                    <div>
+                                      <label className="block text-white/50 mb-1">Spacer Height (px)</label>
+                                      <input
+                                        type="number"
+                                        value={block.height || 24}
+                                        onChange={(e) => {
+                                          const newBlocks = [...(selectedEntry.content?.blocks || [])];
+                                          newBlocks[index] = {
+                                            ...newBlocks[index],
+                                            height: parseInt(e.target.value) || 24,
+                                          };
+                                          updateBlocks(newBlocks);
+                                        }}
+                                        className="w-full p-2 bg-black/40 border border-white/15 rounded-lg text-white"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
+
+                                {/* Insertion Line Below */}
+                                {isBelowTarget && (
+                                  <div className="h-1 bg-purple-500 rounded-full my-0.5 mx-2 shadow-sm animate-pulse" />
+                                )}
                               </div>
-
-                              {/* Text Block Fields */}
-                              {block.type === 'text' && (
-                                <div>
-                                  <label className="block text-white/50 mb-1">Text Content</label>
-                                  <textarea
-                                    value={block.value || ''}
-                                    onChange={(e) => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      newBlocks[index] = { ...newBlocks[index], value: e.target.value };
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    rows={3}
-                                    className="w-full p-2 bg-black/40 border border-white/15 rounded-lg text-white"
-                                  />
-                                </div>
-                              )}
-
-                              {/* Image Block Fields */}
-                              {block.type === 'image' && (
-                                <CloudinaryUploadField
-                                  label="Image URL / Upload"
-                                  value={block.url || ''}
-                                  onChange={(url) => {
-                                    const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                    newBlocks[index] = { ...newBlocks[index], url };
-                                    updateBlocks(newBlocks);
-                                  }}
-                                  placeholder="Paste image URL..."
-                                  accept="image/*"
-                                  resourceType="image"
-                                />
-                              )}
-
-                              {/* Image Pair Block Fields */}
-                              {block.type === 'imagePair' && (
-                                <div className="space-y-2">
-                                  <CloudinaryUploadField
-                                    label="First Image URL / Upload"
-                                    value={block.url1 || ''}
-                                    onChange={(url) => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      newBlocks[index] = { ...newBlocks[index], url1: url };
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    placeholder="First image URL..."
-                                    accept="image/*"
-                                    resourceType="image"
-                                  />
-                                  <CloudinaryUploadField
-                                    label="Second Image URL / Upload"
-                                    value={block.url2 || ''}
-                                    onChange={(url) => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      newBlocks[index] = { ...newBlocks[index], url2: url };
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    placeholder="Second image URL..."
-                                    accept="image/*"
-                                    resourceType="image"
-                                  />
-                                </div>
-                              )}
-
-                              {/* Video Block Fields */}
-                              {block.type === 'video' && (
-                                <CloudinaryUploadField
-                                  label="Video URL / Upload"
-                                  value={block.url || ''}
-                                  onChange={(url) => {
-                                    const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                    newBlocks[index] = { ...newBlocks[index], url };
-                                    updateBlocks(newBlocks);
-                                  }}
-                                  placeholder="Paste video URL..."
-                                  accept="video/*"
-                                  resourceType="video"
-                                />
-                              )}
-
-                              {/* Caption Block Fields */}
-                              {block.type === 'caption' && (
-                                <div>
-                                  <label className="block text-white/50 mb-1">Caption Text</label>
-                                  <input
-                                    type="text"
-                                    value={block.value || ''}
-                                    onChange={(e) => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      newBlocks[index] = { ...newBlocks[index], value: e.target.value };
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    className="w-full p-2 bg-black/40 border border-white/15 rounded-lg text-white"
-                                  />
-                                </div>
-                              )}
-
-                              {/* Spacer Block Fields */}
-                              {block.type === 'spacer' && (
-                                <div>
-                                  <label className="block text-white/50 mb-1">Spacer Height (px)</label>
-                                  <input
-                                    type="number"
-                                    value={block.height || 24}
-                                    onChange={(e) => {
-                                      const newBlocks = [...(selectedEntry.content?.blocks || [])];
-                                      newBlocks[index] = {
-                                        ...newBlocks[index],
-                                        height: parseInt(e.target.value) || 24,
-                                      };
-                                      updateBlocks(newBlocks);
-                                    }}
-                                    className="w-full p-2 bg-black/40 border border-white/15 rounded-lg text-white"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          ))
+                            );
+                          })
                         )}
                       </div>
                     )}
@@ -1440,7 +1724,7 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
         )}
       </div>
 
-      {/* FLOATING PREVIEW FOR TOUCH DRAG */}
+      {/* FLOATING PREVIEW FOR TOUCH DRAG (ENTRY) */}
       {activeTouchDrag && (
         <div
           className="fixed z-50 pointer-events-none px-4 py-2.5 bg-[#25252c] border border-blue-500 text-white rounded-2xl shadow-2xl flex items-center gap-3 transform -translate-x-1/2 -translate-y-1/2"
@@ -1452,6 +1736,22 @@ export const MobileSystemSettingsAppView: React.FC<MobileSystemSettingsAppViewPr
           <GripVertical className="w-4 h-4 text-blue-400" />
           <div className="text-xs font-bold truncate max-w-[160px]">
             {activeTouchDrag.entry.title}
+          </div>
+        </div>
+      )}
+
+      {/* FLOATING PREVIEW FOR TOUCH DRAG (BLOCK) */}
+      {activeBlockDrag && (
+        <div
+          className="fixed z-50 pointer-events-none px-4 py-2.5 bg-[#25252c] border border-purple-500 text-white rounded-2xl shadow-2xl flex items-center gap-3 transform -translate-x-1/2 -translate-y-1/2"
+          style={{
+            left: `${activeBlockDrag.currentX}px`,
+            top: `${activeBlockDrag.currentY}px`,
+          }}
+        >
+          <GripVertical className="w-4 h-4 text-purple-400" />
+          <div className="text-xs font-bold truncate max-w-[160px]">
+            Block {activeBlockDrag.index + 1}: {activeBlockDrag.block.type}
           </div>
         </div>
       )}

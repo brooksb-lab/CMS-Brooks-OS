@@ -13,8 +13,9 @@ import { cn } from '@/src/lib/utils';
 import windowsConfig from '@/src/data/windows.json';
 import { windowsRegistryData, resolveWindowComponent } from '@/src/data/windowLoader';
 import { DOCK_ORDER } from '@/src/data/dockOrder';
-import { getDerivedLocation, calculateSolarPosition, selectWallpaperFrames } from '@/src/lib/solar';
+import { selectWallpaperFramesByTime } from '@/src/lib/wallpaper';
 import { DEFAULT_WALLPAPER_FRAMES, type SiteSettings } from '@/src/components/SystemSettingsAppView';
+import { MobileMessagesNotification } from '@/src/components/MobileMessagesNotification';
 
 const siteConfig = (windowsConfig as any).site || {};
 const wallpaper = siteConfig.wallpaper || "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg";
@@ -214,20 +215,30 @@ const DesktopApp = () => {
   const [nowDate, setNowDate] = useState(() => new Date());
   const [isTransitionDisabled, setIsTransitionDisabled] = useState(false);
   const preloadedUrlsRef = useRef<Set<string>>(new Set());
+  const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
+      if (visibilityTimeoutRef.current) {
+        clearTimeout(visibilityTimeoutRef.current);
+        visibilityTimeoutRef.current = null;
+      }
       if (document.visibilityState === 'visible') {
         setIsTransitionDisabled(true);
         setNowDate(new Date());
-        const timer = setTimeout(() => {
+        visibilityTimeoutRef.current = setTimeout(() => {
           setIsTransitionDisabled(false);
+          visibilityTimeoutRef.current = null;
         }, 50);
-        return () => clearTimeout(timer);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      if (visibilityTimeoutRef.current) {
+        clearTimeout(visibilityTimeoutRef.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const wallpaperMode = siteState.wallpaperMode || 'static';
@@ -271,6 +282,7 @@ const DesktopApp = () => {
   let upperImgSrc = siteState.wallpaper;
   let upperOpacity = 0;
   let transitionStyle = 'none';
+  let liveNextInTravelUrl = '';
 
   if (!isWallpaperDynamic) {
     lowerImgSrc = siteState.wallpaper;
@@ -291,27 +303,27 @@ const DesktopApp = () => {
     upperOpacity = 0;
     transitionStyle = 'none';
   } else {
-    const loc = getDerivedLocation();
-    const solarPos = calculateSolarPosition(nowDate, loc.latitude, loc.longitude);
-    const selection = selectWallpaperFrames(framesList, solarPos.elevation, solarPos.phase);
+    const frameSelection = selectWallpaperFramesByTime(framesList, nowDate);
 
-    lowerImgSrc = selection.lowerFrame.url;
-    upperImgSrc = selection.upperFrame.url;
-    upperOpacity = selection.blend;
+    lowerImgSrc = frameSelection.lowerFrame.url;
+    upperImgSrc = frameSelection.upperFrame.url;
+    upperOpacity = frameSelection.blend;
     transitionStyle = isTransitionDisabled ? 'none' : 'opacity 2s linear';
-
-    const urlsToPreload = [selection.lowerFrame.url, selection.upperFrame.url];
-    if (selection.nextFrameInTravel?.url) {
-      urlsToPreload.push(selection.nextFrameInTravel.url);
-    }
-    urlsToPreload.forEach((url) => {
-      if (url && !preloadedUrlsRef.current.has(url)) {
-        preloadedUrlsRef.current.add(url);
-        const img = new Image();
-        img.src = url;
-      }
-    });
+    liveNextInTravelUrl = frameSelection.nextFrameInTravel?.url || '';
   }
+
+  useEffect(() => {
+    if (isWallpaperDynamic && !isTestMode && !overrideFrameId) {
+      const urlsToPreload = [lowerImgSrc, upperImgSrc, liveNextInTravelUrl].filter(Boolean);
+      urlsToPreload.forEach((url) => {
+        if (!preloadedUrlsRef.current.has(url)) {
+          preloadedUrlsRef.current.add(url);
+          const img = new Image();
+          img.src = url;
+        }
+      });
+    }
+  }, [isWallpaperDynamic, isTestMode, overrideFrameId, lowerImgSrc, upperImgSrc, liveNextInTravelUrl]);
 
   const openMobileApp = isMobile ? (Object.values(windows) as WindowState[]).find(w => w.isOpen && w.id !== 'stickies' && !w.isMinimized) : null;
   const isMobileAppOpen = isMobile && !!openMobileApp;
@@ -1146,55 +1158,16 @@ const DesktopApp = () => {
 
         {/* Page 2 (1) */}
         <div className="absolute inset-0 w-full h-full sm:hidden" style={{ left: '100%' }}>
-          {/* Background Windows Layer (e.g. Stickies) */}
+          {/* Background Windows Layer */}
           <div className="absolute inset-0 pointer-events-none">
             <AnimatePresence>
-              {appList.filter(app => app.isOpen && app.id === 'stickies' && isMobile).map(app => (
-                <Window
-                  key={app.id}
-                  id={app.id}
-                  title={app.title}
-                  isOpen={app.isOpen}
-                  isMinimized={app.isMinimized}
-                  isFullScreen={app.isFullScreen}
-                  isMobile={isTouchUI}
-                  isActive={activeWindowId === app.id}
-                  zIndex={app.zIndex}
-                  onClose={() => closeWindow(app.id)}
-                  onMinimize={() => minimizeWindow(app.id)}
-                  onFocus={() => focusWindow(app.id)}
-                  onMaximize={(isMax) => toggleFullScreen(app.id, isMax)}
-                  width={isTouchUI ? (app.id === 'stickies' && isMobile ? 280 : '100vw') : app.width}
-                  height={isTouchUI ? (app.id === 'stickies' && isMobile ? 300 : '100dvh') : app.height}
-                  initialX={isTouchUI && app.id === 'stickies' && isMobile ? (window.innerWidth - 280) / 2 : (isDesktop ? (typeof app.initialX === 'number' ? app.initialX : undefined) : undefined)}
-                  initialY={isTouchUI && app.id === 'stickies' && isMobile ? 120 : (isDesktop ? (typeof app.initialY === 'number' ? app.initialY : undefined) : undefined)}
-                  dragConstraints={desktopRef}
-                  variant={app.variant}
-                  icon={app.icon}
-                  folderContents={app.folderContents}
-                  windows={windows}
-                  launchRect={app.launchRect}
-                  minimizeRect={app.minimizeRect}
-                >
-                  {app.variant === 'folder' && app.folderContents ? (
-                    <FolderContent 
-                      appId={app.id}
-                      appIds={app.folderContents} 
-                      windows={windows} 
-                      toggleWindow={handleToggleApp} 
-                      isTouchUI={isTouchUI}
-                      isMobile={isTouchUI}
-                      closeFolder={() => closeWindow(app.id)}
-                    />
-                  ) : (
-                    app.component
-                  )}
-                </Window>
-              ))}
             </AnimatePresence>
           </div>
         </div>
       </motion.div>
+
+      {/* Mobile Messages Notification (Replaces Sticky window on mobile) */}
+      {isMobile && <MobileMessagesNotification />}
 
       {/* Page Dots Indicator */}
       {isMobile && !isMobileAppOpen && (
