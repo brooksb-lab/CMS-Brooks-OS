@@ -1,10 +1,10 @@
 {
   "site": {
-    "wallpaper": "https://res.cloudinary.com/dezas8twg/image/upload/v1778338802/bliss-windows-xp-remastered-2025-5k-vt_qaclh3.jpg",
+    "wallpaper": "https://res.cloudinary.com/dezas8twg/image/upload/v1785600830/Meadow_02_igrshw.png",
     "menuBarTitle": "Brooks",
-    "wallpaperMode": "dynamic",
+    "wallpaperMode": "static",
     "wallpaperOverride": "",
-    "wallpaperTestMode": true,
+    "wallpaperTestMode": false,
     "wallpaperTestInterval": 1,
     "wallpaperFrames": [
       {
